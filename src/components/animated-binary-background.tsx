@@ -41,28 +41,33 @@ const AnimatedBinaryBackground: React.FC<AnimatedBinaryBackgroundProps> = ({
     }
 
     const numLines = 30;
+    // Use deterministic opacity values based on line index to avoid hydration mismatch
     return Array(numLines)
       .fill(null)
-      .map((_, lineIndex) => (
-        <div
-          key={lineIndex}
-          className="binary-line"
-          style={{
-            opacity: 0.4 + Math.random() * 0.4,
-          }}
-        >
-          {longSequence.split("").map((char, charIndex) => (
-            <span
-              key={charIndex}
-              className={
-                char === "0" || char === "1" ? "binary-digit" : "binary-space"
-              }
-            >
-              {char}
-            </span>
-          ))}
-        </div>
-      ));
+      .map((_, lineIndex) => {
+        // Create consistent opacity based on line index
+        const opacity = 0.4 + ((lineIndex * 7) % 10) * 0.04; // Creates values between 0.4 and 0.76
+        return (
+          <div
+            key={lineIndex}
+            className="binary-line"
+            style={{
+              opacity: opacity,
+            }}
+          >
+            {longSequence.split("").map((char, charIndex) => (
+              <span
+                key={charIndex}
+                className={
+                  char === "0" || char === "1" ? "binary-digit" : "binary-space"
+                }
+              >
+                {char}
+              </span>
+            ))}
+          </div>
+        );
+      });
   }, [textToConvert]);
 
   useEffect(() => {
