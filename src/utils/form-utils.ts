@@ -65,14 +65,8 @@ export const getPlayerData = (
     email: formData[`${prefix}Email` as keyof FormData] as string,
     phone: formData[`${prefix}Phone` as keyof FormData] as string,
     countryCode: formData[`${prefix}CountryCode` as keyof FormData] as string,
-    dob:
-      playerType === "backup"
-        ? (formData[`${prefix}DOB` as keyof FormData] as string)
-        : (formData[`${prefix}DOB` as keyof FormData] as string),
-    proofOfAge:
-      playerType === "backup"
-        ? (formData[`${prefix}ProofOfAge` as keyof FormData] as File | null)
-        : (formData[`${prefix}ProofOfAge` as keyof FormData] as File | null),
+    dob: formData[`${prefix}DOB` as keyof FormData] as string,
+    proofOfAge: formData[`${prefix}ProofOfAge` as keyof FormData] as File | null,
     emergencyContactFirstName: formData[
       `${prefix}EmergencyContactFirstName` as keyof FormData
     ] as string,
