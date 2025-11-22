@@ -27,7 +27,7 @@ export default function RegisterPage() {
     setFieldError,
     clearFieldError,
   } = useFormValidation();
-  const { currentStep, nextStep, prevStep, canGoNext, canGoBack, progress } =
+  const { currentStep, nextStep, prevStep, canGoNext, canGoBack } =
     useFormNavigation(5);
 
   const [stepValidation, setStepValidation] = useState<{

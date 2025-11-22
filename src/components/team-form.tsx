@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTheme } from "@/contexts/theme-context";
-import { TeamData, FormData } from "@/types/form-types";
+import { TeamData } from "@/types/form-types";
 
 interface TeamFormProps {
   teamData: TeamData;
