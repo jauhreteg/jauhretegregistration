@@ -12,6 +12,7 @@ interface AnimatedBinaryBackgroundProps {
   glowIntensity?: number;
   glowInterval?: number;
   glowDuration?: number;
+  enableRadialFade?: boolean;
 }
 
 const textToBinary = (inputText: string): string => {
@@ -30,6 +31,7 @@ const AnimatedBinaryBackground: React.FC<AnimatedBinaryBackgroundProps> = ({
   glowIntensity = 10,
   glowInterval = 150,
   glowDuration = 700,
+  enableRadialFade = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -144,10 +146,12 @@ const AnimatedBinaryBackground: React.FC<AnimatedBinaryBackgroundProps> = ({
           lineHeight: lineHeight,
           whiteSpace: "nowrap",
           padding: "5px 0",
-          maskImage:
-            "radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%)",
+          ...(enableRadialFade && {
+            maskImage:
+              "radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%)",
+          }),
         }}
       >
         {binaryLines}
