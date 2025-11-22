@@ -12,6 +12,7 @@ interface AnimatedBinaryBackgroundProps {
   glowIntensity?: number;
   glowInterval?: number;
   glowDuration?: number;
+  enableRadialFade?: boolean;
 }
 
 const textToBinary = (inputText: string): string => {
@@ -30,6 +31,7 @@ const AnimatedBinaryBackground: React.FC<AnimatedBinaryBackgroundProps> = ({
   glowIntensity = 10,
   glowInterval = 150,
   glowDuration = 700,
+  enableRadialFade = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -43,26 +45,30 @@ const AnimatedBinaryBackground: React.FC<AnimatedBinaryBackgroundProps> = ({
     const numLines = 30;
     return Array(numLines)
       .fill(null)
-      .map((_, lineIndex) => (
-        <div
-          key={lineIndex}
-          className="binary-line"
-          style={{
-            opacity: 0.4 + Math.random() * 0.4,
-          }}
-        >
-          {longSequence.split("").map((char, charIndex) => (
-            <span
-              key={charIndex}
-              className={
-                char === "0" || char === "1" ? "binary-digit" : "binary-space"
-              }
-            >
-              {char}
-            </span>
-          ))}
-        </div>
-      ));
+      .map((_, lineIndex) => {
+        // Create consistent opacity based on line index to avoid hydration mismatch
+        const opacity = 0.4 + ((lineIndex * 7) % 10) * 0.04; // Creates values between 0.4 and 0.76
+        return (
+          <div
+            key={lineIndex}
+            className="binary-line"
+            style={{
+              opacity: opacity,
+            }}
+          >
+            {longSequence.split("").map((char, charIndex) => (
+              <span
+                key={charIndex}
+                className={
+                  char === "0" || char === "1" ? "binary-digit" : "binary-space"
+                }
+              >
+                {char}
+              </span>
+            ))}
+          </div>
+        );
+      });
   }, [textToConvert]);
 
   useEffect(() => {
@@ -139,10 +145,12 @@ const AnimatedBinaryBackground: React.FC<AnimatedBinaryBackgroundProps> = ({
           lineHeight: lineHeight,
           whiteSpace: "nowrap",
           padding: "5px 0",
-          maskImage:
-            "radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%)",
+          ...(enableRadialFade && {
+            maskImage:
+              "radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%)",
+          }),
         }}
       >
         {binaryLines}

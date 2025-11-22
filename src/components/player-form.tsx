@@ -1,0 +1,915 @@
+"use client";
+
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon, Upload } from "lucide-react";
+import { format } from "date-fns";
+import { useTheme } from "@/contexts/theme-context";
+
+// Country codes data
+const COUNTRY_CODES = [
+  { code: "+1", name: "United States/Canada", flag: "🇺🇸" },
+  { code: "+44", name: "United Kingdom", flag: "🇬🇧" },
+  { code: "+91", name: "India", flag: "🇮🇳" },
+  { code: "+61", name: "Australia", flag: "🇦🇺" },
+  { code: "+33", name: "France", flag: "🇫🇷" },
+  { code: "+49", name: "Germany", flag: "🇩🇪" },
+  { code: "+81", name: "Japan", flag: "🇯🇵" },
+  { code: "+86", name: "China", flag: "🇨🇳" },
+  { code: "+7", name: "Russia", flag: "🇷🇺" },
+  { code: "+39", name: "Italy", flag: "🇮🇹" },
+  { code: "+34", name: "Spain", flag: "🇪🇸" },
+  { code: "+31", name: "Netherlands", flag: "🇳🇱" },
+  { code: "+46", name: "Sweden", flag: "🇸🇪" },
+  { code: "+47", name: "Norway", flag: "🇳🇴" },
+  { code: "+45", name: "Denmark", flag: "🇩🇰" },
+  { code: "+41", name: "Switzerland", flag: "🇨🇭" },
+  { code: "+43", name: "Austria", flag: "🇦🇹" },
+  { code: "+32", name: "Belgium", flag: "🇧🇪" },
+  { code: "+351", name: "Portugal", flag: "🇵🇹" },
+  { code: "+30", name: "Greece", flag: "🇬🇷" },
+  { code: "+90", name: "Turkey", flag: "🇹🇷" },
+  { code: "+52", name: "Mexico", flag: "🇲🇽" },
+  { code: "+55", name: "Brazil", flag: "🇧🇷" },
+  { code: "+54", name: "Argentina", flag: "🇦🇷" },
+  { code: "+56", name: "Chile", flag: "🇨🇱" },
+  { code: "+57", name: "Colombia", flag: "🇨🇴" },
+  { code: "+51", name: "Peru", flag: "🇵🇪" },
+  { code: "+27", name: "South Africa", flag: "🇿🇦" },
+  { code: "+20", name: "Egypt", flag: "🇪🇬" },
+  { code: "+971", name: "UAE", flag: "🇦🇪" },
+  { code: "+966", name: "Saudi Arabia", flag: "🇸🇦" },
+  { code: "+65", name: "Singapore", flag: "🇸🇬" },
+  { code: "+60", name: "Malaysia", flag: "🇲🇾" },
+  { code: "+66", name: "Thailand", flag: "🇹🇭" },
+  { code: "+84", name: "Vietnam", flag: "🇻🇳" },
+  { code: "+62", name: "Indonesia", flag: "🇮🇩" },
+  { code: "+63", name: "Philippines", flag: "🇵🇭" },
+  { code: "+82", name: "South Korea", flag: "🇰🇷" },
+  { code: "+64", name: "New Zealand", flag: "🇳🇿" },
+].sort((a, b) => a.name.localeCompare(b.name));
+
+// Validation utility functions
+const validateEmail = (email: string): string | null => {
+  if (!email) return null;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) ? null : "Please enter a valid email address";
+};
+
+const validatePhoneNumber = (
+  phone: string,
+  countryCode: string
+): string | null => {
+  if (!phone) return null;
+
+  // Remove all non-digit characters for validation
+  const cleanPhone = phone.replace(/\D/g, "");
+
+  // Basic phone number validation based on country code
+  const phoneValidation = {
+    "+1": { min: 10, max: 10, name: "US/Canada" }, // (XXX) XXX-XXXX
+    "+44": { min: 10, max: 11, name: "UK" },
+    "+91": { min: 10, max: 10, name: "India" },
+    "+61": { min: 9, max: 9, name: "Australia" },
+    "+33": { min: 9, max: 9, name: "France" },
+    "+49": { min: 10, max: 12, name: "Germany" },
+    "+81": { min: 10, max: 11, name: "Japan" },
+    "+86": { min: 11, max: 11, name: "China" },
+  };
+
+  const validation =
+    phoneValidation[countryCode as keyof typeof phoneValidation];
+  if (!validation) {
+    // Generic validation for other countries
+    if (cleanPhone.length < 7 || cleanPhone.length > 15) {
+      return "Phone number should be between 7-15 digits";
+    }
+    return null;
+  }
+
+  if (
+    cleanPhone.length < validation.min ||
+    cleanPhone.length > validation.max
+  ) {
+    return `Phone number for ${validation.name} should be ${validation.min}${
+      validation.min !== validation.max ? `-${validation.max}` : ""
+    } digits`;
+  }
+
+  return null;
+};
+
+import { PlayerType, PlayerData } from "@/types/form-types";
+
+interface PlayerFormProps {
+  playerType: PlayerType;
+  playerData: PlayerData;
+  validationErrors: Record<string, string | undefined>;
+  onFieldChange: (field: string, value: string | File | null) => void;
+  onValidationError: (field: string, error: string | undefined) => void;
+  isRequired?: (fieldName: string) => boolean;
+}
+
+const RequiredAsterisk = ({
+  fieldName,
+  isRequired,
+}: {
+  fieldName: string;
+  isRequired?: (fieldName: string) => boolean;
+}) => {
+  return isRequired?.(fieldName) ? (
+    <span className="text-red-600">*</span>
+  ) : null;
+};
+
+export default function PlayerForm({
+  playerType,
+  playerData,
+  validationErrors,
+  onFieldChange,
+  onValidationError,
+  isRequired = () => false,
+}: PlayerFormProps) {
+  const { isDarkMode } = useTheme();
+
+  // Helper to get field name with player prefix
+  const getFieldName = (field: keyof PlayerData) =>
+    `${playerType}${field.charAt(0).toUpperCase() + field.slice(1)}`;
+
+  // Helper to get player display name
+  const getPlayerDisplayName = () => {
+    switch (playerType) {
+      case "player1":
+        return "Player 1";
+      case "player2":
+        return "Player 2";
+      case "player3":
+        return "Player 3";
+      case "backup":
+        return "Backup Player";
+    }
+  };
+
+  // Enhanced field change handler with validation
+  const handleFieldChange = (
+    field: keyof PlayerData,
+    value: string | File | null
+  ) => {
+    const fieldName = getFieldName(field);
+    onFieldChange(fieldName, value);
+
+    // Real-time validation for email and phone fields
+    if (typeof value === "string") {
+      let error: string | null = null;
+
+      // Email validation
+      if (field === "email") {
+        error = validateEmail(value);
+      }
+
+      // Phone validation
+      if (field === "phone") {
+        error = validatePhoneNumber(value, playerData.countryCode);
+      }
+
+      // Emergency phone validation (less strict)
+      if (field === "emergencyContactPhone") {
+        if (value && value.replace(/\D/g, "").length < 7) {
+          error = "Please enter a valid phone number";
+        }
+      }
+
+      onValidationError(fieldName, error || undefined);
+    }
+  };
+
+  // Handle country code change with phone re-validation
+  const handleCountryCodeChange = (value: string) => {
+    handleFieldChange("countryCode", value);
+    // Re-validate phone number when country code changes
+    if (playerData.phone) {
+      const phoneError = validatePhoneNumber(playerData.phone, value);
+      onValidationError(getFieldName("phone"), phoneError || undefined);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold uppercase mb-6 font-montserrat">
+        {getPlayerDisplayName()} Information
+      </h2>
+
+      {/* Personal Information Section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold font-montserrat">
+          Personal Information
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor={getFieldName("firstName")}>
+              First Name{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("firstName")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <Input
+              id={getFieldName("firstName")}
+              value={playerData.firstName}
+              onChange={(e) => handleFieldChange("firstName", e.target.value)}
+              placeholder="First name"
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={getFieldName("middleName")}>
+              Middle Name{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("middleName")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <Input
+              id={getFieldName("middleName")}
+              value={playerData.middleName}
+              onChange={(e) => handleFieldChange("middleName", e.target.value)}
+              placeholder="Middle name (optional)"
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={getFieldName("lastName")}>
+              Last Name{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("lastName")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <Input
+              id={getFieldName("lastName")}
+              type="text"
+              placeholder="Last name"
+              value={playerData.lastName}
+              onChange={(e) => handleFieldChange("lastName", e.target.value)}
+              className={`h-10 font-montserrat ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:border-gray-500"
+              }`}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={getFieldName("singhKaur")}>
+            (Singh / Kaur){" "}
+            <RequiredAsterisk
+              fieldName={getFieldName("singhKaur")}
+              isRequired={isRequired}
+            />
+          </Label>
+          <Select
+            value={playerData.singhKaur}
+            onValueChange={(value) => handleFieldChange("singhKaur", value)}
+          >
+            <SelectTrigger
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            >
+              <SelectValue placeholder="Select Singh or Kaur" />
+            </SelectTrigger>
+            <SelectContent
+              className={`${
+                isDarkMode
+                  ? "bg-gray-900 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
+            >
+              <SelectItem value="Singh">Singh</SelectItem>
+              <SelectItem value="Kaur">Kaur</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Contact Information Section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold font-montserrat">
+          Contact Information
+        </h3>
+        <div className="space-y-2">
+          <Label htmlFor={getFieldName("email")}>
+            Email{" "}
+            <RequiredAsterisk
+              fieldName={getFieldName("email")}
+              isRequired={isRequired}
+            />
+          </Label>
+          <Input
+            id={getFieldName("email")}
+            type="email"
+            value={playerData.email}
+            onChange={(e) => handleFieldChange("email", e.target.value)}
+            placeholder="player@example.com"
+            className={`h-10 ${
+              validationErrors[getFieldName("email")]
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                : isDarkMode
+                ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+            }`}
+          />
+          {validationErrors[getFieldName("email")] && (
+            <p className="text-red-500 text-sm mt-1">
+              {validationErrors[getFieldName("email")]}
+            </p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="space-y-2 md:col-span-4">
+            <Label htmlFor={getFieldName("countryCode")}>
+              Country Code{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("countryCode")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <Select
+              value={playerData.countryCode}
+              onValueChange={handleCountryCodeChange}
+            >
+              <SelectTrigger
+                className={`h-10 ${
+                  isDarkMode
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent
+                className={`max-h-60 overflow-y-auto w-80 ${
+                  isDarkMode
+                    ? "bg-gray-900 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                }`}
+                align="start"
+                side="bottom"
+              >
+                {COUNTRY_CODES.map((country) => (
+                  <SelectItem
+                    key={country.code}
+                    value={country.code}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <span className="text-base">{country.flag}</span>
+                      <span className="text-sm truncate">{country.code}</span>
+                      <span className="text-xs text-gray-500 truncate">
+                        {country.name}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2 md:col-span-8">
+            <Label htmlFor={getFieldName("phone")}>
+              Phone Number{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("phone")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <div className="space-y-1">
+              <Input
+                id={getFieldName("phone")}
+                type="tel"
+                value={playerData.phone}
+                onChange={(e) => handleFieldChange("phone", e.target.value)}
+                placeholder="Phone number"
+                className={`h-10 ${
+                  validationErrors[getFieldName("phone")]
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    : isDarkMode
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              />
+              {validationErrors[getFieldName("phone")] && (
+                <p className="text-red-500 text-sm">
+                  {validationErrors[getFieldName("phone")]}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Birth Information Section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold font-montserrat">
+          Birth Information
+        </h3>
+        <div className="space-y-2">
+          <Label>
+            Date of Birth{" "}
+            <RequiredAsterisk
+              fieldName={getFieldName("dob")}
+              isRequired={isRequired}
+            />
+          </Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={`h-10 w-full justify-start text-left font-normal ${
+                  !playerData.dob && "text-muted-foreground"
+                } ${
+                  isDarkMode
+                    ? "border-gray-600 bg-gray-800 hover:bg-gray-700 focus:border-gray-400"
+                    : "border-gray-300 bg-white hover:bg-gray-50 focus:border-gray-500"
+                }`}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {playerData.dob ? (
+                  format(new Date(playerData.dob), "PPP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className={`w-auto p-0 ${
+                isDarkMode
+                  ? "bg-gray-900 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
+            >
+              <Calendar
+                mode="single"
+                selected={playerData.dob ? new Date(playerData.dob) : undefined}
+                onSelect={(date) =>
+                  handleFieldChange(
+                    "dob",
+                    date ? format(date, "yyyy-MM-dd") : ""
+                  )
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={getFieldName("proofOfAge")}>
+            Proof of Age Document{" "}
+            <RequiredAsterisk
+              fieldName={getFieldName("proofOfAge")}
+              isRequired={isRequired}
+            />
+          </Label>
+          <div
+            className={`border-2 border-dashed rounded-lg p-4 ${
+              isDarkMode
+                ? "border-gray-600 bg-gray-800"
+                : "border-gray-300 bg-gray-50"
+            }`}
+          >
+            <input
+              type="file"
+              id={getFieldName("proofOfAge")}
+              accept="image/*,.pdf"
+              onChange={(e) =>
+                handleFieldChange("proofOfAge", e.target.files?.[0] || null)
+              }
+              className="hidden"
+            />
+            <label
+              htmlFor={getFieldName("proofOfAge")}
+              className="cursor-pointer flex flex-col items-center"
+            >
+              <Upload className="w-8 h-8 mb-2 text-gray-400" />
+              <span className="text-sm text-gray-500">
+                {playerData.proofOfAge
+                  ? playerData.proofOfAge.name
+                  : "Click to upload birth certificate, passport, or ID"}
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Emergency Contact Section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold font-montserrat">
+          Emergency Contact
+        </h3>
+
+        {/* Emergency Contact Name */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor={getFieldName("emergencyContactFirstName")}>
+              First Name{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("emergencyContactFirstName")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <Input
+              id={getFieldName("emergencyContactFirstName")}
+              value={playerData.emergencyContactFirstName}
+              onChange={(e) =>
+                handleFieldChange("emergencyContactFirstName", e.target.value)
+              }
+              placeholder="First name"
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={getFieldName("emergencyContactMiddleName")}>
+              Middle Name{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("emergencyContactMiddleName")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <Input
+              id={getFieldName("emergencyContactMiddleName")}
+              value={playerData.emergencyContactMiddleName}
+              onChange={(e) =>
+                handleFieldChange("emergencyContactMiddleName", e.target.value)
+              }
+              placeholder="Middle name (optional)"
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={getFieldName("emergencyContactLastName")}>
+              Last Name{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("emergencyContactLastName")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <Input
+              id={getFieldName("emergencyContactLastName")}
+              value={playerData.emergencyContactLastName}
+              onChange={(e) =>
+                handleFieldChange("emergencyContactLastName", e.target.value)
+              }
+              placeholder="Last name"
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            />
+          </div>
+        </div>
+
+        {/* Emergency Contact Phone */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="space-y-2 md:col-span-4">
+            <Label htmlFor={getFieldName("emergencyContactCountryCode")}>
+              Country Code{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("emergencyContactCountryCode")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <Select
+              value={playerData.emergencyContactCountryCode}
+              onValueChange={(value) =>
+                handleFieldChange("emergencyContactCountryCode", value)
+              }
+            >
+              <SelectTrigger
+                className={`h-10 ${
+                  isDarkMode
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent
+                className={`max-h-60 overflow-y-auto w-80 ${
+                  isDarkMode
+                    ? "bg-gray-900 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                }`}
+                align="start"
+                side="bottom"
+              >
+                {COUNTRY_CODES.map((country) => (
+                  <SelectItem
+                    key={country.code}
+                    value={country.code}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <span className="text-base">{country.flag}</span>
+                      <span className="text-sm truncate">{country.code}</span>
+                      <span className="text-xs text-gray-500 truncate">
+                        {country.name}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2 md:col-span-8">
+            <Label htmlFor={getFieldName("emergencyContactPhone")}>
+              Phone Number{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("emergencyContactPhone")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <div className="space-y-1">
+              <Input
+                id={getFieldName("emergencyContactPhone")}
+                type="tel"
+                value={playerData.emergencyContactPhone}
+                onChange={(e) =>
+                  handleFieldChange("emergencyContactPhone", e.target.value)
+                }
+                placeholder="Phone number"
+                className={`h-10 ${
+                  validationErrors[getFieldName("emergencyContactPhone")]
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    : isDarkMode
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              />
+              {validationErrors[getFieldName("emergencyContactPhone")] && (
+                <p className="text-red-500 text-sm">
+                  {validationErrors[getFieldName("emergencyContactPhone")]}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Family Information Section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold font-montserrat">
+          Family Information
+        </h3>
+
+        {/* Father Information */}
+        <div className="space-y-2">
+          <h4 className="font-medium text-gray-700 dark:text-gray-300">
+            Father Name
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor={getFieldName("fatherFirstName")}>
+                First Name{" "}
+                <RequiredAsterisk
+                  fieldName={getFieldName("fatherFirstName")}
+                  isRequired={isRequired}
+                />
+              </Label>
+              <Input
+                id={getFieldName("fatherFirstName")}
+                value={playerData.fatherFirstName}
+                onChange={(e) =>
+                  handleFieldChange("fatherFirstName", e.target.value)
+                }
+                placeholder="First name"
+                className={`h-10 ${
+                  isDarkMode
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={getFieldName("fatherMiddleName")}>
+                Middle Name{" "}
+                <RequiredAsterisk
+                  fieldName={getFieldName("fatherMiddleName")}
+                  isRequired={isRequired}
+                />
+              </Label>
+              <Input
+                id={getFieldName("fatherMiddleName")}
+                value={playerData.fatherMiddleName}
+                onChange={(e) =>
+                  handleFieldChange("fatherMiddleName", e.target.value)
+                }
+                placeholder="Middle name (optional)"
+                className={`h-10 ${
+                  isDarkMode
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={getFieldName("fatherLastName")}>
+                Last Name{" "}
+                <RequiredAsterisk
+                  fieldName={getFieldName("fatherLastName")}
+                  isRequired={isRequired}
+                />
+              </Label>
+              <Input
+                id={getFieldName("fatherLastName")}
+                value={playerData.fatherLastName}
+                onChange={(e) =>
+                  handleFieldChange("fatherLastName", e.target.value)
+                }
+                placeholder="Last name"
+                className={`h-10 ${
+                  isDarkMode
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Mother Information */}
+        <div className="space-y-2">
+          <h4 className="font-medium text-gray-700 dark:text-gray-300">
+            Mother Name
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor={getFieldName("motherFirstName")}>
+                First Name{" "}
+                <RequiredAsterisk
+                  fieldName={getFieldName("motherFirstName")}
+                  isRequired={isRequired}
+                />
+              </Label>
+              <Input
+                id={getFieldName("motherFirstName")}
+                value={playerData.motherFirstName}
+                onChange={(e) =>
+                  handleFieldChange("motherFirstName", e.target.value)
+                }
+                placeholder="First name"
+                className={`h-10 ${
+                  isDarkMode
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={getFieldName("motherMiddleName")}>
+                Middle Name{" "}
+                <RequiredAsterisk
+                  fieldName={getFieldName("motherMiddleName")}
+                  isRequired={isRequired}
+                />
+              </Label>
+              <Input
+                id={getFieldName("motherMiddleName")}
+                value={playerData.motherMiddleName}
+                onChange={(e) =>
+                  handleFieldChange("motherMiddleName", e.target.value)
+                }
+                placeholder="Middle name (optional)"
+                className={`h-10 ${
+                  isDarkMode
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={getFieldName("motherLastName")}>
+                Last Name{" "}
+                <RequiredAsterisk
+                  fieldName={getFieldName("motherLastName")}
+                  isRequired={isRequired}
+                />
+              </Label>
+              <Input
+                id={getFieldName("motherLastName")}
+                value={playerData.motherLastName}
+                onChange={(e) =>
+                  handleFieldChange("motherLastName", e.target.value)
+                }
+                placeholder="Last name"
+                className={`h-10 ${
+                  isDarkMode
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Location and Experience Section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold font-montserrat">
+          Location & Experience
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor={getFieldName("pindVillage")}>
+              Pind/Village or Town/City{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("pindVillage")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <Input
+              id={getFieldName("pindVillage")}
+              value={playerData.pindVillage}
+              onChange={(e) => handleFieldChange("pindVillage", e.target.value)}
+              placeholder="Place of residence"
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={getFieldName("gatkaExperience")}>
+              Years of Gatka Experience{" "}
+              <RequiredAsterisk
+                fieldName={getFieldName("gatkaExperience")}
+                isRequired={isRequired}
+              />
+            </Label>
+            <Input
+              id={getFieldName("gatkaExperience")}
+              type="number"
+              min="0"
+              value={playerData.gatkaExperience}
+              onChange={(e) =>
+                handleFieldChange("gatkaExperience", e.target.value)
+              }
+              placeholder="Years of experience"
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

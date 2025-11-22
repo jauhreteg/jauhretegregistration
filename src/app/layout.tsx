@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/contexts/theme-context";
 
 // Load Montserrat with multiple weights for flexibility
 const montserrat = Montserrat({
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   description:
     "Register your team for the International 3v3 Fari Soti Competition. Official registration portal for Jauhr E Teg tournament.",
   icons: {
-    icon: "/logo.svg",
+    icon: "/jet-black.svg",
   },
 };
 
@@ -26,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${montserrat.variable} font-montserrat antialiased`}>
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
