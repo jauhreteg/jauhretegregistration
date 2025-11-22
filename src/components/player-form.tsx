@@ -79,24 +79,60 @@ const validatePhoneNumber = (
   // Remove all non-digit characters for validation
   const cleanPhone = phone.replace(/\D/g, "");
 
-  // Basic phone number validation based on country code
+  // Phone number validation with actual international standards
   const phoneValidation = {
-    "+1": { min: 10, max: 10, name: "US/Canada" }, // (XXX) XXX-XXXX
-    "+44": { min: 10, max: 11, name: "UK" },
-    "+91": { min: 10, max: 10, name: "India" },
-    "+61": { min: 9, max: 9, name: "Australia" },
-    "+33": { min: 9, max: 9, name: "France" },
-    "+49": { min: 10, max: 12, name: "Germany" },
-    "+81": { min: 10, max: 11, name: "Japan" },
-    "+86": { min: 11, max: 11, name: "China" },
+    "+1": { min: 10, max: 10, name: "United States/Canada" }, // NANP format
+    "+44": { min: 10, max: 10, name: "United Kingdom" }, // UK mobile/landline
+    "+91": { min: 10, max: 10, name: "India" }, // Indian mobile numbers
+    "+61": { min: 9, max: 9, name: "Australia" }, // Australian mobile numbers
+    "+33": { min: 10, max: 10, name: "France" }, // French numbers
+    "+49": { min: 11, max: 12, name: "Germany" }, // German numbers
+    "+81": { min: 10, max: 11, name: "Japan" }, // Japanese numbers
+    "+86": { min: 11, max: 11, name: "China" }, // Chinese mobile numbers
+    "+7": { min: 10, max: 10, name: "Russia" }, // Russian mobile numbers
+    "+39": { min: 9, max: 11, name: "Italy" }, // Italian numbers
+    "+34": { min: 9, max: 9, name: "Spain" }, // Spanish numbers
+    "+31": { min: 9, max: 9, name: "Netherlands" }, // Dutch numbers
+    "+46": { min: 7, max: 9, name: "Sweden" }, // Swedish numbers
+    "+47": { min: 8, max: 8, name: "Norway" }, // Norwegian mobile numbers
+    "+45": { min: 8, max: 8, name: "Denmark" }, // Danish numbers
+    "+41": { min: 9, max: 9, name: "Switzerland" }, // Swiss numbers
+    "+43": { min: 10, max: 13, name: "Austria" }, // Austrian numbers
+    "+32": { min: 8, max: 9, name: "Belgium" }, // Belgian numbers
+    "+351": { min: 9, max: 9, name: "Portugal" }, // Portuguese numbers
+    "+30": { min: 10, max: 10, name: "Greece" }, // Greek numbers
+    "+90": { min: 10, max: 10, name: "Turkey" }, // Turkish mobile numbers
+    "+52": { min: 10, max: 12, name: "Mexico" }, // Mexican numbers with area codes
+    "+55": { min: 10, max: 11, name: "Brazil" }, // Brazilian mobile numbers
+    "+54": { min: 8, max: 11, name: "Argentina" }, // Argentine numbers
+    "+56": { min: 8, max: 9, name: "Chile" }, // Chilean numbers
+    "+57": { min: 10, max: 10, name: "Colombia" }, // Colombian mobile numbers
+    "+51": { min: 8, max: 9, name: "Peru" }, // Peruvian numbers
+    "+27": { min: 9, max: 9, name: "South Africa" }, // South African mobile numbers
+    "+20": { min: 10, max: 10, name: "Egypt" }, // Egyptian mobile numbers
+    "+971": { min: 8, max: 9, name: "UAE" }, // UAE mobile numbers
+    "+966": { min: 9, max: 9, name: "Saudi Arabia" }, // Saudi mobile numbers
+    "+65": { min: 8, max: 8, name: "Singapore" }, // Singapore numbers
+    "+60": { min: 8, max: 10, name: "Malaysia" }, // Malaysian numbers
+    "+66": { min: 8, max: 9, name: "Thailand" }, // Thai mobile numbers
+    "+84": { min: 9, max: 10, name: "Vietnam" }, // Vietnamese numbers
+    "+62": { min: 7, max: 12, name: "Indonesia" }, // Indonesian numbers (varies by region)
+    "+63": { min: 10, max: 10, name: "Philippines" }, // Philippine mobile numbers
+    "+82": { min: 9, max: 11, name: "South Korea" }, // Korean numbers
+    "+64": { min: 8, max: 10, name: "New Zealand" }, // New Zealand numbers
   };
 
   const validation =
     phoneValidation[countryCode as keyof typeof phoneValidation];
+
+  // Get country name from COUNTRY_CODES if not in validation
+  const countryInfo = COUNTRY_CODES.find((c) => c.code === countryCode);
+  const countryName = validation?.name || countryInfo?.name || countryCode;
+
   if (!validation) {
-    // Generic validation for other countries
+    // Fallback validation for countries not specifically defined
     if (cleanPhone.length < 7 || cleanPhone.length > 15) {
-      return "Phone number should be between 7-15 digits";
+      return `Phone number for ${countryName} should be between 7-15 digits`;
     }
     return null;
   }
@@ -186,11 +222,12 @@ export default function PlayerForm({
         error = validatePhoneNumber(value, playerData.countryCode);
       }
 
-      // Emergency phone validation (less strict)
+      // Emergency phone validation (same as main phone)
       if (field === "emergencyContactPhone") {
-        if (value && value.replace(/\D/g, "").length < 7) {
-          error = "Please enter a valid phone number";
-        }
+        error = validatePhoneNumber(
+          value,
+          playerData.emergencyContactCountryCode
+        );
       }
 
       onValidationError(fieldName, error || undefined);
@@ -204,6 +241,22 @@ export default function PlayerForm({
     if (playerData.phone) {
       const phoneError = validatePhoneNumber(playerData.phone, value);
       onValidationError(getFieldName("phone"), phoneError || undefined);
+    }
+  };
+
+  // Handle emergency contact country code change with phone re-validation
+  const handleEmergencyCountryCodeChange = (value: string) => {
+    handleFieldChange("emergencyContactCountryCode", value);
+    // Re-validate emergency contact phone number when country code changes
+    if (playerData.emergencyContactPhone) {
+      const phoneError = validatePhoneNumber(
+        playerData.emergencyContactPhone,
+        value
+      );
+      onValidationError(
+        getFieldName("emergencyContactPhone"),
+        phoneError || undefined
+      );
     }
   };
 
@@ -620,9 +673,7 @@ export default function PlayerForm({
             </Label>
             <Select
               value={playerData.emergencyContactCountryCode}
-              onValueChange={(value) =>
-                handleFieldChange("emergencyContactCountryCode", value)
-              }
+              onValueChange={handleEmergencyCountryCodeChange}
             >
               <SelectTrigger
                 className={`h-10 ${

@@ -1,11 +1,11 @@
 /**
- * Generate a secure registration token in the format JET-2025-XXXXXX
- * where XXXXXX is a cryptographically secure random alphanumeric string
+ * Generate a secure registration token in the format jet-2025-YYYYY
+ * where YYYYY is a cryptographically secure random alphanumeric string
  */
 export function generateRegistrationToken(): string {
   const currentYear = new Date().getFullYear();
-  const randomString = generateSecureAlphanumeric(6);
-  return `JET-${currentYear}-${randomString}`;
+  const randomString = generateSecureAlphanumeric(5);
+  return `jet-${currentYear}-${randomString}`;
 }
 
 /**
@@ -43,6 +43,6 @@ function generateSecureAlphanumeric(length: number): string {
  * Validate registration token format
  */
 export function isValidRegistrationToken(token: string): boolean {
-  const tokenPattern = /^JET-\d{4}-[A-Z0-9]{6}$/;
+  const tokenPattern = /^jet-\d{4}-[A-Z0-9]{5}$/;
   return tokenPattern.test(token);
 }
