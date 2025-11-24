@@ -34,7 +34,7 @@ export function BackupPlayerDecision({
   const { isDarkMode } = useTheme();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-montserrat">
       <h2 className="text-xl font-bold uppercase mb-6 font-montserrat">
         Backup Player
       </h2>

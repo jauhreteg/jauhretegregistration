@@ -13,6 +13,7 @@ export type FormData = {
   playerOrder2: string;
   playerOrder3: string;
   hasBackupPlayer: boolean | null;
+  teamPhotos: File[];
 
   // Player 1 - Comprehensive Information
   player1FirstName: string;
@@ -157,4 +158,5 @@ export interface TeamData {
   playerOrder1: string;
   playerOrder2: string;
   playerOrder3: string;
+  teamPhotos: File[];
 }

@@ -2,6 +2,14 @@ import { FormData, FieldConfig } from "@/types/form-types";
 
 // Field configuration system
 export const FIELD_CONFIG: Record<string, FieldConfig[]> = {
+  division: [{ field: "division", label: "Division", required: false }],
+  backupDecision: [
+    {
+      field: "hasBackupPlayer",
+      label: "Backup Player Decision",
+      required: false,
+    },
+  ],
   player1: [
     { field: "player1FirstName", label: "First Name", required: false },
     { field: "player1MiddleName", label: "Middle Name", required: false },
@@ -367,10 +375,10 @@ export const FIELD_CONFIG: Record<string, FieldConfig[]> = {
       label: "Senior Gatkai Email",
       required: false,
     },
-    { field: "division", label: "Division", required: false },
     { field: "playerOrder1", label: "1st Position", required: false },
     { field: "playerOrder2", label: "2nd Position", required: false },
     { field: "playerOrder3", label: "3rd Position", required: false },
+    { field: "teamPhotos", label: "Team Photos", required: false },
   ],
 };
 
@@ -393,7 +401,7 @@ export const validateFieldsFromConfig = (
 ): { isValid: boolean; missingFields: string[] } => {
   const config = FIELD_CONFIG[configKey];
   if (!config) {
-    return { isValid: true, missingFields: [] };
+    return { isValid: false, missingFields: [] };
   }
 
   const missingFields: string[] = [];

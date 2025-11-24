@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import PlayerForm from "@/components/player-form";
 import TeamForm from "@/components/team-form";
 import { BackupPlayerDecision } from "@/components/backup-player-decision";
+import { DivisionSelection } from "@/components/division-selection";
 import { FormLayout } from "@/components/form-layout";
 import { RegistrationSuccess } from "@/components/registration-success";
 
@@ -28,7 +29,7 @@ export default function RegisterPage() {
     clearFieldError,
   } = useFormValidation();
   const { currentStep, nextStep, prevStep, canGoNext, canGoBack } =
-    useFormNavigation(5);
+    useFormNavigation(6);
 
   const [stepValidation, setStepValidation] = useState<{
     isValid: boolean;
@@ -40,17 +41,18 @@ export default function RegisterPage() {
 
   // Form step definitions
   const steps = [
-    { label: "PLAYER 1", completed: currentStep > 1 },
-    { label: "PLAYER 2", completed: currentStep > 2 },
-    { label: "PLAYER 3", completed: currentStep > 3 },
-    { label: "BACKUP PLAYER", completed: currentStep > 4 },
-    { label: "TEAM INFO", completed: currentStep > 5 },
+    { label: "DIVISION", completed: currentStep > 1 },
+    { label: "PLAYER 1", completed: currentStep > 2 },
+    { label: "PLAYER 2", completed: currentStep > 3 },
+    { label: "PLAYER 3", completed: currentStep > 4 },
+    { label: "BACKUP PLAYER", completed: currentStep > 5 },
+    { label: "TEAM INFO", completed: currentStep > 6 },
   ];
 
   // Real-time field validation and updates
   const handleFieldChange = (
     field: string,
-    value: string | File | null | boolean
+    value: string | File | File[] | null | boolean
   ) => {
     updateField(field as any, value);
 
@@ -134,6 +136,15 @@ export default function RegisterPage() {
     switch (currentStep) {
       case 1:
         return (
+          <DivisionSelection
+            value={formData.division}
+            onValueChange={(value) => handleFieldChange("division", value)}
+            isRequired={isFieldRequired}
+          />
+        );
+
+      case 2:
+        return (
           <PlayerForm
             playerType="player1"
             playerData={getPlayerData(formData, "player1")}
@@ -141,10 +152,11 @@ export default function RegisterPage() {
             onFieldChange={handlePlayerFieldChange}
             onValidationError={handlePlayerValidationError}
             isRequired={isFieldRequired}
+            division={formData.division}
           />
         );
 
-      case 2:
+      case 3:
         return (
           <PlayerForm
             playerType="player2"
@@ -153,10 +165,11 @@ export default function RegisterPage() {
             onFieldChange={handlePlayerFieldChange}
             onValidationError={handlePlayerValidationError}
             isRequired={isFieldRequired}
+            division={formData.division}
           />
         );
 
-      case 3:
+      case 4:
         return (
           <PlayerForm
             playerType="player3"
@@ -165,10 +178,11 @@ export default function RegisterPage() {
             onFieldChange={handlePlayerFieldChange}
             onValidationError={handlePlayerValidationError}
             isRequired={isFieldRequired}
+            division={formData.division}
           />
         );
 
-      case 4:
+      case 5:
         return (
           <div className="space-y-6">
             <BackupPlayerDecision
@@ -181,21 +195,20 @@ export default function RegisterPage() {
 
             {/* Backup Player Information Form - Shows when Yes is selected */}
             {formData.hasBackupPlayer === true && (
-              <div className="mt-6 p-6 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-                <PlayerForm
-                  playerType="backup"
-                  playerData={getPlayerData(formData, "backup")}
-                  validationErrors={validationErrors}
-                  onFieldChange={handlePlayerFieldChange}
-                  onValidationError={handlePlayerValidationError}
-                  isRequired={isFieldRequired}
-                />
-              </div>
+              <PlayerForm
+                playerType="backup"
+                playerData={getPlayerData(formData, "backup")}
+                validationErrors={validationErrors}
+                onFieldChange={handlePlayerFieldChange}
+                onValidationError={handlePlayerValidationError}
+                isRequired={isFieldRequired}
+                division={formData.division}
+              />
             )}
           </div>
         );
 
-      case 5:
+      case 6:
         return (
           <TeamForm
             teamData={getTeamData(formData)}
@@ -215,8 +228,8 @@ export default function RegisterPage() {
   return (
     <FormLayout
       title="JAUHR E TEG REGISTRATION"
-      currentStep={isSubmissionComplete ? 6 : currentStep}
-      totalSteps={5}
+      currentStep={isSubmissionComplete ? 7 : currentStep}
+      totalSteps={6}
       steps={steps}
       validationError={{
         isVisible: !stepValidation.isValid && !isSubmissionComplete,
@@ -225,7 +238,7 @@ export default function RegisterPage() {
       navigation={{
         canGoBack: !isSubmissionComplete && canGoBack,
         canGoNext: !isSubmissionComplete && canGoNext,
-        isLastStep: isSubmissionComplete || currentStep === 5,
+        isLastStep: isSubmissionComplete || currentStep === 6,
         onBack: prevStep,
         onNext: handleNext,
         onSubmit: isSubmissionComplete ? handleComplete : handleSubmit,

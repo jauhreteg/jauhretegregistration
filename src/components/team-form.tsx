@@ -9,13 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FileUpload } from "@/components/file-upload";
 import { useTheme } from "@/contexts/theme-context";
 import { TeamData } from "@/types/form-types";
 
 interface TeamFormProps {
   teamData: TeamData;
   validationErrors: Record<string, string | undefined>;
-  onFieldChange: (field: string, value: string) => void;
+  onFieldChange: (field: string, value: string | File | File[] | null) => void;
   onValidationError: (field: string, error: string | undefined) => void;
   isRequired?: (fieldName: string) => boolean;
   playerNames: {
@@ -48,7 +49,10 @@ export default function TeamForm({
   const { isDarkMode } = useTheme();
 
   // Enhanced field change handler
-  const handleFieldChange = (field: keyof TeamData, value: string) => {
+  const handleFieldChange = (
+    field: keyof TeamData,
+    value: string | File | File[] | null
+  ) => {
     onFieldChange(field, value);
 
     // Clear validation errors when user starts typing
@@ -56,7 +60,7 @@ export default function TeamForm({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-montserrat">
       <h2 className="text-xl font-bold uppercase mb-6">Team Information</h2>
 
       {/* Team Name Section */}
@@ -78,71 +82,8 @@ export default function TeamForm({
         />
       </div>
 
-      {/* Location Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold font-montserrat">Location</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="city">
-              City <RequiredAsterisk fieldName="city" isRequired={isRequired} />
-            </Label>
-            <Input
-              id="city"
-              value={teamData.city}
-              onChange={(e) => handleFieldChange("city", e.target.value)}
-              placeholder="Enter city"
-              className={`h-10 ${
-                isDarkMode
-                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
-                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
-              }`}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="state">
-              State{" "}
-              <RequiredAsterisk fieldName="state" isRequired={isRequired} />
-            </Label>
-            <Input
-              id="state"
-              value={teamData.state}
-              onChange={(e) => handleFieldChange("state", e.target.value)}
-              placeholder="Enter state"
-              className={`h-10 ${
-                isDarkMode
-                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
-                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
-              }`}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="country">
-              Country{" "}
-              <RequiredAsterisk fieldName="country" isRequired={isRequired} />
-            </Label>
-            <Input
-              id="country"
-              value={teamData.country}
-              onChange={(e) => handleFieldChange("country", e.target.value)}
-              placeholder="Enter country"
-              className={`h-10 ${
-                isDarkMode
-                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
-                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
-              }`}
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Team Leadership Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold font-montserrat">
-          Team Leadership
-        </h3>
-
         {/* Ustaad Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -237,23 +178,63 @@ export default function TeamForm({
         </div>
       </div>
 
-      {/* Division Section */}
-      <div className="space-y-2">
-        <Label htmlFor="division">
-          Division{" "}
-          <RequiredAsterisk fieldName="division" isRequired={isRequired} />
-        </Label>
-        <Input
-          id="division"
-          value={teamData.division}
-          onChange={(e) => handleFieldChange("division", e.target.value)}
-          placeholder="Enter division"
-          className={`h-10 ${
-            isDarkMode
-              ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
-              : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
-          }`}
-        />
+      {/* Location Section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold font-montserrat">Location</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="city">
+              City <RequiredAsterisk fieldName="city" isRequired={isRequired} />
+            </Label>
+            <Input
+              id="city"
+              value={teamData.city}
+              onChange={(e) => handleFieldChange("city", e.target.value)}
+              placeholder="Enter city"
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="state">
+              State{" "}
+              <RequiredAsterisk fieldName="state" isRequired={isRequired} />
+            </Label>
+            <Input
+              id="state"
+              value={teamData.state}
+              onChange={(e) => handleFieldChange("state", e.target.value)}
+              placeholder="Enter state"
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="country">
+              Country{" "}
+              <RequiredAsterisk fieldName="country" isRequired={isRequired} />
+            </Label>
+            <Input
+              id="country"
+              value={teamData.country}
+              onChange={(e) => handleFieldChange("country", e.target.value)}
+              placeholder="Enter country"
+              className={`h-10 ${
+                isDarkMode
+                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+              }`}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Player Order Section */}
@@ -376,6 +357,45 @@ export default function TeamForm({
               </SelectContent>
             </Select>
           </div>
+        </div>
+      </div>
+
+      {/* Team Photos Section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold font-montserrat">Team Photos</h3>
+        <div className="space-y-3">
+          <div
+            className={`p-4 rounded-lg ${
+              isDarkMode
+                ? "bg-gray-800 text-gray-300"
+                : "bg-gray-50 text-gray-600"
+            }`}
+          >
+            <p className="text-sm leading-relaxed mb-2 font-montserrat">
+              <strong>Photo Requirements:</strong>
+            </p>
+            <ul className="text-sm space-y-1 list-disc list-inside font-montserrat">
+              <li>
+                Team pictures must be taken in bana with Ustad and all players
+                in one picture
+              </li>
+              <li>NO collages - but you can upload multiple photos</li>
+              <li>High resolution and clear visibility of all team members</li>
+              <li>Acceptable formats: JPG, PNG, or PDF</li>
+            </ul>
+          </div>
+
+          <FileUpload
+            id="teamPhotos"
+            label="Upload Team Photos"
+            value={teamData.teamPhotos}
+            onChange={(files) =>
+              handleFieldChange("teamPhotos", files as File[])
+            }
+            accept="image/*,.pdf"
+            multiple
+            required={isRequired?.("teamPhotos")}
+          />
         </div>
       </div>
     </div>

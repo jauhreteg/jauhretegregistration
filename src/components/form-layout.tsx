@@ -44,7 +44,7 @@ export function FormLayout({
 
   return (
     <div
-      className={`min-h-screen p-4 md:p-8 ${
+      className={`min-h-screen p-4 md:p-8 font-montserrat ${
         isDarkMode ? "bg-black text-white" : "bg-white text-gray-900"
       }`}
     >

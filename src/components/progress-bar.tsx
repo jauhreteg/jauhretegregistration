@@ -15,11 +15,12 @@ export function ProgressBar({
   // Manual progress values for each step to align perfectly with step labels
   // The values chosen are based on visual estimation for better alignment
   const progressValues: { [key: number]: number } = {
-    1: 4, // PLAYER 1 - 4%
-    2: 25, // PLAYER 2 - 25%
-    3: 47, // PLAYER 3 - 47%
-    4: 71, // BACKUP PLAYER - 71%
-    5: 95, // TEAM INFO - 95%
+    1: 4, // DIVISION - 4%
+    2: 21, // PLAYER 1 - 21%
+    3: 38, // PLAYER 2 - 37%
+    4: 55, // PLAYER 3 - 55%
+    5: 75, // BACKUP PLAYER - 75%
+    6: 96, // TEAM INFO - 96%
   };
 
   // For success page (currentStep > totalSteps), show 100% completion
@@ -27,7 +28,7 @@ export function ProgressBar({
     currentStep > totalSteps ? 100 : progressValues[currentStep] || 0;
 
   return (
-    <div className="mb-8">
+    <div className="mb-8 font-montserrat">
       <div className="flex justify-between mb-2">
         {steps.map((step, index) => (
           <span

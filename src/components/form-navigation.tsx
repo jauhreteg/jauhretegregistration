@@ -31,7 +31,7 @@ export function FormNavigation({
   const { isDarkMode } = useTheme();
 
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex justify-between items-center font-montserrat">
       <div className="flex items-center gap-2 text-sm text-gray-600 font-montserrat">
         {!hideStepCounter && (
           <span>

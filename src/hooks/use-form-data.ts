@@ -6,7 +6,7 @@ export function useFormData() {
   const [formData, setFormData] = useState<FormData>(getInitialFormData());
 
   const updateField = useCallback(
-    (field: keyof FormData, value: string | File | null | boolean) => {
+    (field: keyof FormData, value: string | File | File[] | null | boolean) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
     []

@@ -15,6 +15,7 @@ export const getInitialFormData = (): FormData => ({
   playerOrder2: "Player 2",
   playerOrder3: "Player 3",
   hasBackupPlayer: null,
+  teamPhotos: [],
 
   // Player 1 - Comprehensive Information
   player1FirstName: "",

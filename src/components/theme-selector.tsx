@@ -53,7 +53,7 @@ export default function ThemeSelector() {
           variant="ghost"
           size="icon"
           className={`
-            rounded-full transition-all ${
+            rounded-full transition-all font-montserrat ${
               activeConfig.effects.enableFastTransitions
                 ? "duration-75"
                 : "duration-300"

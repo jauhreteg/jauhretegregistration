@@ -66,7 +66,9 @@ export const getPlayerData = (
     phone: formData[`${prefix}Phone` as keyof FormData] as string,
     countryCode: formData[`${prefix}CountryCode` as keyof FormData] as string,
     dob: formData[`${prefix}DOB` as keyof FormData] as string,
-    proofOfAge: formData[`${prefix}ProofOfAge` as keyof FormData] as File | null,
+    proofOfAge: formData[
+      `${prefix}ProofOfAge` as keyof FormData
+    ] as File | null,
     emergencyContactFirstName: formData[
       `${prefix}EmergencyContactFirstName` as keyof FormData
     ] as string,
@@ -122,6 +124,7 @@ export const getTeamData = (formData: FormData): TeamData => {
     playerOrder1: formData.playerOrder1,
     playerOrder2: formData.playerOrder2,
     playerOrder3: formData.playerOrder3,
+    teamPhotos: formData.teamPhotos,
   };
 };
 

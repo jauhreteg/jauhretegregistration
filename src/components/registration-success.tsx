@@ -37,7 +37,7 @@ export function RegistrationSuccess({
   };
 
   return (
-    <div className="text-center space-y-8">
+    <div className="text-center space-y-6 font-montserrat">
       {/* Success Icon */}
       <div className="flex justify-center mb-8">
         <div className="w-20 h-20 bg-[#F5A623] rounded-full flex items-center justify-center">

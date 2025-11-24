@@ -17,13 +17,15 @@ export function useFormValidation() {
     (step: number, formData: FormData): ValidationResult => {
       switch (step) {
         case 1:
-          return validateFieldsFromConfig("player1", formData);
+          return validateFieldsFromConfig("division", formData);
         case 2:
-          return validateFieldsFromConfig("player2", formData);
+          return validateFieldsFromConfig("player1", formData);
         case 3:
-          return validateFieldsFromConfig("player3", formData);
+          return validateFieldsFromConfig("player2", formData);
         case 4:
-          // Backup player decision step
+          return validateFieldsFromConfig("player3", formData);
+        case 5:
+          // Check if backup player decision has been made
           const hasBackupDecision =
             formData.hasBackupPlayer !== null &&
             formData.hasBackupPlayer !== undefined;
@@ -40,8 +42,9 @@ export function useFormValidation() {
             return validateFieldsFromConfig("backup", formData);
           }
 
+          // If no backup player (false), that's valid
           return { isValid: true, missingFields: [] };
-        case 5:
+        case 6:
           return validateFieldsFromConfig("team", formData);
         default:
           return { isValid: false, missingFields: [] };

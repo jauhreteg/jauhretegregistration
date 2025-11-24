@@ -16,8 +16,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Upload } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { FileUpload } from "@/components/file-upload";
 import { useTheme } from "@/contexts/theme-context";
 
 // Country codes data
@@ -158,6 +159,7 @@ interface PlayerFormProps {
   onFieldChange: (field: string, value: string | File | null) => void;
   onValidationError: (field: string, error: string | undefined) => void;
   isRequired?: (fieldName: string) => boolean;
+  division?: string;
 }
 
 const RequiredAsterisk = ({
@@ -179,8 +181,15 @@ export default function PlayerForm({
   onFieldChange,
   onValidationError,
   isRequired = () => false,
+  division,
 }: PlayerFormProps) {
   const { isDarkMode } = useTheme();
+
+  // Helper to determine if proof of age is required based on division
+  const isProofOfAgeRequired = () => {
+    if (!division) return true; // Show by default if no division selected
+    return division === "Junior Kaurs" || division === "Junior Singhs";
+  };
 
   // Helper to get field name with player prefix
   const getFieldName = (field: keyof PlayerData) =>
@@ -261,7 +270,7 @@ export default function PlayerForm({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-montserrat">
       <h2 className="text-xl font-bold uppercase mb-6 font-montserrat">
         {getPlayerDisplayName()} Information
       </h2>
@@ -370,6 +379,78 @@ export default function PlayerForm({
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      {/* Birth Information Section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold font-montserrat">
+          Birth Information
+        </h3>
+        <div className="space-y-2">
+          <Label>
+            Date of Birth{" "}
+            <RequiredAsterisk
+              fieldName={getFieldName("dob")}
+              isRequired={isRequired}
+            />
+          </Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={`h-10 w-full justify-start text-left font-normal ${
+                  !playerData.dob && "text-muted-foreground"
+                } ${
+                  isDarkMode
+                    ? "border-gray-600 bg-gray-800 hover:bg-gray-700 focus:border-gray-400"
+                    : "border-gray-300 bg-white hover:bg-gray-50 focus:border-gray-500"
+                }`}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {playerData.dob ? (
+                  format(new Date(playerData.dob), "PPP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className={`w-auto p-0 ${
+                isDarkMode
+                  ? "bg-gray-900 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
+            >
+              <Calendar
+                mode="single"
+                selected={playerData.dob ? new Date(playerData.dob) : undefined}
+                onSelect={(date) =>
+                  handleFieldChange(
+                    "dob",
+                    date ? format(date, "yyyy-MM-dd") : ""
+                  )
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {isProofOfAgeRequired() && (
+          <FileUpload
+            id={getFieldName("proofOfAge")}
+            label="Proof of Age Document"
+            value={playerData.proofOfAge}
+            onChange={(file) =>
+              handleFieldChange("proofOfAge", file as File | null)
+            }
+            accept="image/*,.pdf"
+            multiple={false}
+            required={isRequired?.(getFieldName("proofOfAge"))}
+            placeholder="Click to upload birth certificate, passport, or ID"
+            description="Upload a clear photo of birth certificate, passport, driver's license, or school document showing full name and birthday."
+          />
+        )}
       </div>
 
       {/* Contact Information Section */}
@@ -489,99 +570,7 @@ export default function PlayerForm({
         </div>
       </div>
 
-      {/* Birth Information Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold font-montserrat">
-          Birth Information
-        </h3>
-        <div className="space-y-2">
-          <Label>
-            Date of Birth{" "}
-            <RequiredAsterisk
-              fieldName={getFieldName("dob")}
-              isRequired={isRequired}
-            />
-          </Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={`h-10 w-full justify-start text-left font-normal ${
-                  !playerData.dob && "text-muted-foreground"
-                } ${
-                  isDarkMode
-                    ? "border-gray-600 bg-gray-800 hover:bg-gray-700 focus:border-gray-400"
-                    : "border-gray-300 bg-white hover:bg-gray-50 focus:border-gray-500"
-                }`}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {playerData.dob ? (
-                  format(new Date(playerData.dob), "PPP")
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className={`w-auto p-0 ${
-                isDarkMode
-                  ? "bg-gray-900 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              }`}
-            >
-              <Calendar
-                mode="single"
-                selected={playerData.dob ? new Date(playerData.dob) : undefined}
-                onSelect={(date) =>
-                  handleFieldChange(
-                    "dob",
-                    date ? format(date, "yyyy-MM-dd") : ""
-                  )
-                }
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor={getFieldName("proofOfAge")}>
-            Proof of Age Document{" "}
-            <RequiredAsterisk
-              fieldName={getFieldName("proofOfAge")}
-              isRequired={isRequired}
-            />
-          </Label>
-          <div
-            className={`border-2 border-dashed rounded-lg p-4 ${
-              isDarkMode
-                ? "border-gray-600 bg-gray-800"
-                : "border-gray-300 bg-gray-50"
-            }`}
-          >
-            <input
-              type="file"
-              id={getFieldName("proofOfAge")}
-              accept="image/*,.pdf"
-              onChange={(e) =>
-                handleFieldChange("proofOfAge", e.target.files?.[0] || null)
-              }
-              className="hidden"
-            />
-            <label
-              htmlFor={getFieldName("proofOfAge")}
-              className="cursor-pointer flex flex-col items-center"
-            >
-              <Upload className="w-8 h-8 mb-2 text-gray-400" />
-              <span className="text-sm text-gray-500">
-                {playerData.proofOfAge
-                  ? playerData.proofOfAge.name
-                  : "Click to upload birth certificate, passport, or ID"}
-              </span>
-            </label>
-          </div>
-        </div>
-      </div>
 
       {/* Emergency Contact Section */}
       <div className="space-y-4">
