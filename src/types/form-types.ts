@@ -24,7 +24,7 @@ export type FormData = {
   player1Phone: string;
   player1CountryCode: string;
   player1DOB: string;
-  player1ProofOfAge: File | null;
+  player1ProofOfAge: File[] | null;
   player1EmergencyContactFirstName: string;
   player1EmergencyContactMiddleName: string;
   player1EmergencyContactLastName: string;
@@ -48,7 +48,7 @@ export type FormData = {
   player2Phone: string;
   player2CountryCode: string;
   player2DOB: string;
-  player2ProofOfAge: File | null;
+  player2ProofOfAge: File[] | null;
   player2EmergencyContactFirstName: string;
   player2EmergencyContactMiddleName: string;
   player2EmergencyContactLastName: string;
@@ -72,7 +72,7 @@ export type FormData = {
   player3Phone: string;
   player3CountryCode: string;
   player3DOB: string;
-  player3ProofOfAge: File | null;
+  player3ProofOfAge: File[] | null;
   player3EmergencyContactFirstName: string;
   player3EmergencyContactMiddleName: string;
   player3EmergencyContactLastName: string;
@@ -96,7 +96,7 @@ export type FormData = {
   backupPhone: string;
   backupCountryCode: string;
   backupDOB: string;
-  backupProofOfAge: File | null;
+  backupProofOfAge: File[] | null;
   backupEmergencyContactFirstName: string;
   backupEmergencyContactMiddleName: string;
   backupEmergencyContactLastName: string;

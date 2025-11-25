@@ -394,7 +394,7 @@ export default function PlayerForm({
               storageKey={`${playerType}-dob`}
               value={
                 playerData.dob && playerData.dob.trim()
-                  ? new Date(playerData.dob + "T00:00:00")
+                  ? new Date(playerData.dob)
                   : undefined
               }
               onChange={(date) => {
@@ -417,11 +417,11 @@ export default function PlayerForm({
             id={getFieldName("proofOfAge")}
             label="Proof of Age Document"
             value={playerData.proofOfAge}
-            onChange={(file) =>
-              handleFieldChange("proofOfAge", file as File | null)
+            onChange={(files) =>
+              handleFieldChange("proofOfAge", files as File[])
             }
             accept="image/*,.pdf"
-            multiple={false}
+            multiple={true}
             required={isRequired?.(getFieldName("proofOfAge"))}
             placeholder="Click to upload birth certificate, passport, or ID"
             description="Upload a clear photo of birth certificate, passport, driver's license, or school document showing full name and birthday."

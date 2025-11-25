@@ -33,13 +33,13 @@ CREATE TABLE registrations (
     coach_email TEXT,
     team_location TEXT,
     player_order TEXT,
-    team_photo TEXT, -- Will store file path/URL
+    team_photo JSONB, -- Will store array of file URLs
     
     -- Player 1 Data
     player1_name TEXT,
     player1_singh_kaur TEXT,
     player1_dob DATE,
-    player1_dob_proof TEXT, -- Will store file path/URL
+    player1_dob_proof JSONB, -- Will store array of file URLs
     player1_email TEXT,
     player1_phone_number TEXT,
     player1_emergency_contact_name TEXT,
@@ -53,7 +53,7 @@ CREATE TABLE registrations (
     player2_name TEXT,
     player2_singh_kaur TEXT,
     player2_dob DATE,
-    player2_dob_proof TEXT, -- Will store file path/URL
+    player2_dob_proof JSONB, -- Will store array of file URLs
     player2_email TEXT,
     player2_phone_number TEXT,
     player2_emergency_contact_name TEXT,
@@ -67,7 +67,7 @@ CREATE TABLE registrations (
     player3_name TEXT,
     player3_singh_kaur TEXT,
     player3_dob DATE,
-    player3_dob_proof TEXT, -- Will store file path/URL
+    player3_dob_proof JSONB, -- Will store array of file URLs
     player3_email TEXT,
     player3_phone_number TEXT,
     player3_emergency_contact_name TEXT,
@@ -82,7 +82,7 @@ CREATE TABLE registrations (
     backup_name TEXT,
     backup_singh_kaur TEXT,
     backup_dob DATE,
-    backup_dob_proof TEXT, -- Will store file path/URL
+    backup_dob_proof JSONB, -- Will store array of file URLs
     backup_email TEXT,
     backup_phone_number TEXT,
     backup_emergency_contact_name TEXT,
@@ -176,5 +176,5 @@ FROM registrations r;
 
 -- Storage bucket creation (you'll need to create these in Supabase Dashboard > Storage)
 -- Bucket name: jet-documents
--- Make it public: false (we'll handle permissions)
+-- Make it public: true (required for public URLs in current implementation)
 -- Note: Folders will be created automatically when files are uploaded

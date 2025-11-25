@@ -32,13 +32,13 @@ export interface Registration {
   coach_email: string | null;
   team_location: string;
   player_order: string;
-  team_photo: string | null;
+  team_photo: string[] | null;
 
   // Player 1 Data
   player1_name: string;
   player1_singh_kaur: string;
   player1_dob: string | null;
-  player1_dob_proof: string | null;
+  player1_dob_proof: string[] | null;
   player1_email: string;
   player1_phone_number: string;
   player1_emergency_contact_name: string;
@@ -52,7 +52,7 @@ export interface Registration {
   player2_name: string;
   player2_singh_kaur: string;
   player2_dob: string | null;
-  player2_dob_proof: string | null;
+  player2_dob_proof: string[] | null;
   player2_email: string;
   player2_phone_number: string;
   player2_emergency_contact_name: string;
@@ -66,7 +66,7 @@ export interface Registration {
   player3_name: string;
   player3_singh_kaur: string;
   player3_dob: string | null;
-  player3_dob_proof: string | null;
+  player3_dob_proof: string[] | null;
   player3_email: string;
   player3_phone_number: string;
   player3_emergency_contact_name: string;
@@ -81,7 +81,7 @@ export interface Registration {
   backup_name: string | null;
   backup_singh_kaur: string | null;
   backup_dob: string | null;
-  backup_dob_proof: string | null;
+  backup_dob_proof: string[] | null;
   backup_email: string | null;
   backup_phone_number: string | null;
   backup_emergency_contact_name: string | null;

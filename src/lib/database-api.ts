@@ -1,19 +1,11 @@
 import { supabase } from "@/lib/supabase";
-import {
-  RegistrationInsert,
-  FileUploadInsert,
-  RegistrationSummary,
-} from "@/types/database";
+import { FileUploadInsert, RegistrationSummary } from "@/types/database";
 import { FormData } from "@/types/form-types";
 import {
   transformFormDataToRegistration,
   extractFilesFromFormData,
 } from "@/utils/form-transformer";
-import {
-  uploadFile,
-  uploadMultipleFiles,
-  createFileMetadata,
-} from "@/utils/file-storage";
+import { uploadFile, createFileMetadata } from "@/utils/file-storage";
 
 /**
  * Response type for registration submission
@@ -71,6 +63,9 @@ export async function submitRegistration(
     const fileUploadRecords: FileUploadInsert[] = [];
     const uploadErrors: string[] = [];
 
+    // Group files by type to handle multiple files per field
+    const fileGroups: { [key: string]: string[] } = {};
+
     for (const fileInfo of files) {
       if (fileInfo.file) {
         console.log(`📤 Uploading ${fileInfo.type}...`);
@@ -80,27 +75,29 @@ export async function submitRegistration(
           // Create file metadata for database
           const fileMetadata = createFileMetadata(
             fileInfo.file,
-            fileInfo.type as
-              | "team_photo"
-              | "player1_dob_proof"
-              | "player2_dob_proof"
-              | "player3_dob_proof"
-              | "backup_dob_proof",
+            fileInfo.type,
             url,
             registrationId
           );
           fileUploadRecords.push(fileMetadata);
 
-          // Update registration record with file URL
-          await updateRegistrationWithFileUrl(
-            registrationId,
-            fileInfo.type,
-            url
-          );
+          // Group URLs by type for batch update
+          const baseType = fileInfo.type
+            ? fileInfo.type.replace(/_\d+$/, "")
+            : fileInfo.type; // Remove _1, _2 suffixes if any
+          if (!fileGroups[baseType]) {
+            fileGroups[baseType] = [];
+          }
+          fileGroups[baseType].push(url);
         } else {
           uploadErrors.push(`${fileInfo.type}: ${error}`);
         }
       }
+    }
+
+    // Update registration record with file URL arrays
+    for (const [fileType, urls] of Object.entries(fileGroups)) {
+      await updateRegistrationWithFileUrls(registrationId, fileType, urls);
     }
 
     // Step 4: Insert file metadata records
@@ -146,12 +143,12 @@ export async function submitRegistration(
 }
 
 /**
- * Updates registration record with uploaded file URL
+ * Updates registration record with uploaded file URLs (supports multiple files)
  */
-async function updateRegistrationWithFileUrl(
+async function updateRegistrationWithFileUrls(
   registrationId: string,
   fileType: string,
-  fileUrl: string
+  fileUrls: string[]
 ): Promise<void> {
   let updateField: string;
 
@@ -179,7 +176,7 @@ async function updateRegistrationWithFileUrl(
 
   const { error } = await supabase
     .from("registrations")
-    .update({ [updateField]: fileUrl })
+    .update({ [updateField]: fileUrls })
     .eq("id", registrationId);
 
   if (error) {

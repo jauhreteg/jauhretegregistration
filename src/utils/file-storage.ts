@@ -52,7 +52,7 @@ export async function uploadFile(
     console.log(`📁 Uploading file to: ${fullPath}`);
 
     // Upload file to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from("jet-documents")
       .upload(fullPath, file, {
         cacheControl: "3600",

@@ -293,35 +293,61 @@ export function extractFilesFromFormData(formData: FormData) {
   // Team photos (can be multiple)
   if (formData.teamPhotos && formData.teamPhotos.length > 0) {
     formData.teamPhotos.forEach((photo) => {
-      files.push({ type: "team_photo" as FileType, file: photo });
+      if (photo && photo.size > 0) {
+        files.push({ type: "team_photo" as FileType, file: photo });
+      }
     });
   }
 
-  // Player DOB proofs
-  if (formData.player1ProofOfAge) {
-    files.push({
-      type: "player1_dob_proof" as FileType,
-      file: formData.player1ProofOfAge,
-    });
-  }
-  if (formData.player2ProofOfAge) {
-    files.push({
-      type: "player2_dob_proof" as FileType,
-      file: formData.player2ProofOfAge,
-    });
-  }
-  if (formData.player3ProofOfAge) {
-    files.push({
-      type: "player3_dob_proof" as FileType,
-      file: formData.player3ProofOfAge,
-    });
-  }
-  if (formData.hasBackupPlayer && formData.backupProofOfAge) {
-    files.push({
-      type: "backup_dob_proof" as FileType,
-      file: formData.backupProofOfAge,
+  // Player DOB proofs (now all arrays)
+  if (formData.player1ProofOfAge && formData.player1ProofOfAge.length > 0) {
+    formData.player1ProofOfAge.forEach((file) => {
+      if (file && file.size > 0) {
+        files.push({
+          type: "player1_dob_proof" as FileType,
+          file: file,
+        });
+      }
     });
   }
 
-  return files;
+  if (formData.player2ProofOfAge && formData.player2ProofOfAge.length > 0) {
+    formData.player2ProofOfAge.forEach((file) => {
+      if (file && file.size > 0) {
+        files.push({
+          type: "player2_dob_proof" as FileType,
+          file: file,
+        });
+      }
+    });
+  }
+
+  if (formData.player3ProofOfAge && formData.player3ProofOfAge.length > 0) {
+    formData.player3ProofOfAge.forEach((file) => {
+      if (file && file.size > 0) {
+        files.push({
+          type: "player3_dob_proof" as FileType,
+          file: file,
+        });
+      }
+    });
+  }
+
+  if (
+    formData.hasBackupPlayer &&
+    formData.backupProofOfAge &&
+    formData.backupProofOfAge.length > 0
+  ) {
+    formData.backupProofOfAge.forEach((file) => {
+      if (file && file.size > 0) {
+        files.push({
+          type: "backup_dob_proof" as FileType,
+          file: file,
+        });
+      }
+    });
+  }
+
+  // Filter out any files that might be null or invalid
+  return files.filter((f) => f.file && f.type && f.file.size > 0);
 }
