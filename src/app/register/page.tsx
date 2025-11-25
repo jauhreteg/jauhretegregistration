@@ -14,7 +14,8 @@ import { getPlayerData, getTeamData, getPlayerNames } from "@/utils/form-utils";
 import { useFormData } from "@/hooks/use-form-data";
 import { useFormValidation } from "@/hooks/use-form-validation";
 import { useFormNavigation } from "@/hooks/use-form-navigation";
-import { generateRegistrationToken } from "@/lib/registration-token";
+import { submitRegistration } from "@/lib/database-api";
+import { testSupabaseConnection } from "@/lib/supabase";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -96,22 +97,43 @@ export default function RegisterPage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Generate unique registration token
-      const token = generateRegistrationToken();
+      console.log("🚀 Starting real database submission...");
 
-      // TODO: Implement actual form submission to backend
-      console.log("Submitting form:", formData);
-      console.log("Registration token:", token);
+      // Test database connection first
+      const connectionTest = await testSupabaseConnection();
+      if (!connectionTest) {
+        throw new Error(
+          "Unable to connect to database. Please check your internet connection and try again."
+        );
+      }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Submit to real database
+      console.log("📝 Submitting form data:", formData);
+      const result = await submitRegistration(formData);
 
-      // Show success state
-      setRegistrationToken(token);
-      setIsSubmissionComplete(true);
+      if (result.success) {
+        console.log("✅ Registration successful!", result);
+        setRegistrationToken(result.formToken || "Unknown");
+        setIsSubmissionComplete(true);
+
+        // Show success message if there were any upload warnings
+        if (result.errors && result.errors.length > 0) {
+          console.warn("⚠️ Some files failed to upload:", result.errors);
+        }
+      } else {
+        console.error("❌ Registration failed:", result.message, result.errors);
+        const errorMessage = result.errors
+          ? `Registration failed: ${
+              result.message
+            }. Details: ${result.errors.join(", ")}`
+          : `Registration failed: ${result.message}`;
+        alert(errorMessage);
+      }
     } catch (error) {
-      console.error("Form submission failed:", error);
-      alert("Form submission failed. Please try again.");
+      console.error("💥 Form submission error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "An unexpected error occurred";
+      alert(`Form submission failed: ${errorMessage}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
