@@ -10,13 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
+import { DatePicker } from "@/components/date-picker";
 import { format } from "date-fns";
 import { FileUpload } from "@/components/file-upload";
 import { useTheme } from "@/contexts/theme-context";
@@ -394,46 +388,28 @@ export default function PlayerForm({
               isRequired={isRequired}
             />
           </Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={`h-10 w-full justify-start text-left font-normal ${
-                  !playerData.dob && "text-muted-foreground"
-                } ${
-                  isDarkMode
-                    ? "border-gray-600 bg-gray-800 hover:bg-gray-700 focus:border-gray-400"
-                    : "border-gray-300 bg-white hover:bg-gray-50 focus:border-gray-500"
-                }`}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {playerData.dob ? (
-                  format(new Date(playerData.dob), "PPP")
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className={`w-auto p-0 ${
+          <div className="mt-2">
+            <DatePicker
+              key={playerType}
+              storageKey={`${playerType}-dob`}
+              value={
+                playerData.dob && playerData.dob.trim()
+                  ? new Date(playerData.dob + "T00:00:00")
+                  : undefined
+              }
+              onChange={(date) => {
+                const formattedDate = date ? format(date, "yyyy-MM-dd") : "";
+                const fieldName = getFieldName("dob");
+                handleFieldChange(fieldName, formattedDate);
+              }}
+              placeholder="Pick a date"
+              className={
                 isDarkMode
-                  ? "bg-gray-900 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              }`}
-            >
-              <Calendar
-                mode="single"
-                selected={playerData.dob ? new Date(playerData.dob) : undefined}
-                onSelect={(date) =>
-                  handleFieldChange(
-                    "dob",
-                    date ? format(date, "yyyy-MM-dd") : ""
-                  )
-                }
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+                  ? "border-gray-600 bg-gray-800 hover:bg-gray-700 focus:border-gray-400"
+                  : "border-gray-300 bg-white hover:bg-gray-50 focus:border-gray-500"
+              }
+            />
+          </div>
         </div>
 
         {isProofOfAgeRequired() && (
@@ -569,8 +545,6 @@ export default function PlayerForm({
           </div>
         </div>
       </div>
-
-
 
       {/* Emergency Contact Section */}
       <div className="space-y-4">
