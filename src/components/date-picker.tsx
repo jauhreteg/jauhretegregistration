@@ -94,7 +94,7 @@ export function DatePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-auto overflow-hidden p-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg z-50"
+        className="w-auto overflow-hidden p-0 bg-white border border-gray-200 shadow-lg z-50"
         align="start"
       >
         <Calendar
@@ -102,7 +102,7 @@ export function DatePicker({
           selected={selectedDate}
           captionLayout="dropdown"
           onSelect={handleDateSelect}
-          className="bg-white dark:bg-gray-900"
+          className="bg-white"
         />
       </PopoverContent>
     </Popover>

@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTheme } from "@/contexts/theme-context";
 
 interface DivisionSelectionProps {
   value: string;
@@ -33,15 +32,13 @@ export function DivisionSelection({
   onValueChange,
   isRequired = () => false,
 }: DivisionSelectionProps) {
-  const { isDarkMode } = useTheme();
-
   return (
     <div className="space-y-6 font-montserrat">
       <div className="text-center space-y-4">
         <h2 className="text-2xl font-bold uppercase mb-6 font-montserrat">
           Select Your Division
         </h2>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
+        <p className="text-lg text-gray-600">
           Choose the division your team will compete in. This will determine the
           requirements for your registration.
         </p>
@@ -59,7 +56,7 @@ export function DivisionSelection({
             <Select value={value} onValueChange={onValueChange}>
               <SelectTrigger
                 className={`h-12 text-base w-full ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -68,7 +65,7 @@ export function DivisionSelection({
               </SelectTrigger>
               <SelectContent
                 className={`${
-                  isDarkMode
+                  false
                     ? "bg-gray-900 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 }`}
@@ -83,8 +80,8 @@ export function DivisionSelection({
         </div>
 
         {value && (
-          <div className="mt-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-            <div className="text-sm text-blue-800 dark:text-blue-200">
+          <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
+            <div className="text-sm text-blue-800">
               <strong>Selected:</strong> {value}
               {(value === "Open Kaurs" || value === "Open Singhs") && (
                 <div className="mt-2">

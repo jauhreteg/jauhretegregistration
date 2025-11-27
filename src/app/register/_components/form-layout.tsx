@@ -1,9 +1,8 @@
-import { useTheme } from "@/contexts/theme-context";
 import ThemeSelector from "@/components/theme-selector";
 import { PageHeader } from "@/components/page-header";
-import { ProgressBar } from "@/components/progress-bar";
-import { ValidationErrorDisplay } from "@/components/validation-error-display";
-import { FormNavigation } from "@/components/form-navigation";
+import { ProgressBar } from "./progress-bar";
+import { ValidationErrorDisplay } from "./validation-error-display";
+import { FormNavigation } from "./form-navigation";
 import { ReactNode } from "react";
 
 interface FormLayoutProps {
@@ -40,12 +39,10 @@ export function FormLayout({
   navigation,
   children,
 }: FormLayoutProps) {
-  const { isDarkMode } = useTheme();
-
   return (
     <div
       className={`min-h-screen p-4 md:p-8 font-montserrat ${
-        isDarkMode ? "bg-black text-white" : "bg-white text-gray-900"
+        false ? "bg-black text-white" : "bg-white text-gray-900"
       }`}
     >
       {/* Theme Selector - Bottom Right */}
@@ -67,7 +64,7 @@ export function FormLayout({
         {/* Required Fields Notice - Only show during form steps, not on success */}
         {currentStep <= totalSteps && (
           <div className="text-center mb-6">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600">
               All Fields Marked With <span className="text-red-600">*</span> Are
               Required
             </p>
@@ -83,9 +80,7 @@ export function FormLayout({
         {/* Form Content */}
         <div
           className={`border rounded-lg p-6 md:p-8 mb-6 ${
-            isDarkMode
-              ? "bg-gray-900 border-gray-700"
-              : "bg-white border-gray-200"
+            false ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
           }`}
         >
           {children}

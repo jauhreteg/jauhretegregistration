@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileUpload } from "@/components/file-upload";
-import { useTheme } from "@/contexts/theme-context";
+
 import { TeamData } from "@/types/form-types";
 
 interface TeamFormProps {
@@ -46,8 +46,6 @@ export default function TeamForm({
   isRequired = () => false,
   playerNames,
 }: TeamFormProps) {
-  const { isDarkMode } = useTheme();
-
   // Enhanced field change handler
   const handleFieldChange = (
     field: keyof TeamData,
@@ -75,7 +73,7 @@ export default function TeamForm({
           onChange={(e) => handleFieldChange("teamName", e.target.value)}
           placeholder="Enter team name"
           className={`h-10 ${
-            isDarkMode
+            false
               ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
               : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
           }`}
@@ -97,7 +95,7 @@ export default function TeamForm({
               onChange={(e) => handleFieldChange("ustadName", e.target.value)}
               placeholder="Enter ustaad name"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -119,7 +117,7 @@ export default function TeamForm({
               onChange={(e) => handleFieldChange("ustadEmail", e.target.value)}
               placeholder="ustaad@example.com"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -145,7 +143,7 @@ export default function TeamForm({
               }
               placeholder="Enter senior gatkai name (optional)"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -169,7 +167,7 @@ export default function TeamForm({
               }
               placeholder="seniorgatkai@example.com (optional)"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -192,7 +190,7 @@ export default function TeamForm({
               onChange={(e) => handleFieldChange("city", e.target.value)}
               placeholder="Enter city"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -210,7 +208,7 @@ export default function TeamForm({
               onChange={(e) => handleFieldChange("state", e.target.value)}
               placeholder="Enter state"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -228,7 +226,7 @@ export default function TeamForm({
               onChange={(e) => handleFieldChange("country", e.target.value)}
               placeholder="Enter country"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -263,7 +261,7 @@ export default function TeamForm({
             >
               <SelectTrigger
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -272,7 +270,7 @@ export default function TeamForm({
               </SelectTrigger>
               <SelectContent
                 className={`${
-                  isDarkMode
+                  false
                     ? "bg-gray-900 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 }`}
@@ -300,7 +298,7 @@ export default function TeamForm({
             >
               <SelectTrigger
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -309,7 +307,7 @@ export default function TeamForm({
               </SelectTrigger>
               <SelectContent
                 className={`${
-                  isDarkMode
+                  false
                     ? "bg-gray-900 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 }`}
@@ -337,7 +335,7 @@ export default function TeamForm({
             >
               <SelectTrigger
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -346,7 +344,7 @@ export default function TeamForm({
               </SelectTrigger>
               <SelectContent
                 className={`${
-                  isDarkMode
+                  false
                     ? "bg-gray-900 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 }`}
@@ -366,9 +364,7 @@ export default function TeamForm({
         <div className="space-y-3">
           <div
             className={`p-4 rounded-lg ${
-              isDarkMode
-                ? "bg-gray-800 text-gray-300"
-                : "bg-gray-50 text-gray-600"
+              false ? "bg-gray-800 text-gray-300" : "bg-gray-50 text-gray-600"
             }`}
           >
             <p className="text-sm leading-relaxed mb-2 font-montserrat">
