@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { NavMain } from "./nav-main";
-import { NavSection } from "./nav-section";
 import { NavUser } from "./nav-user";
 import {
   Sidebar,
@@ -54,41 +53,44 @@ const data = {
       title: "Registrations",
       url: "/dashboard/registrations",
       icon: FileText,
+      isActive: false,
     },
-  ],
-  coreManagement: [
-    {
-      name: "Teams",
-      url: "/dashboard/teams",
-      icon: Users,
-    },
-    {
-      name: "Players",
-      url: "/dashboard/players",
-      icon: UserCheck,
-    },
-    {
-      name: "Divisions",
-      url: "/dashboard/divisions",
-      icon: Trophy,
-    },
-  ],
-  analytics: [
-    {
-      name: "Reports",
-      url: "/dashboard/reports",
-      icon: BarChart3,
-    },
-    {
-      name: "Export",
-      url: "/dashboard/export",
-      icon: Download,
-    },
-    {
-      name: "Statistics",
-      url: "/dashboard/statistics",
-      icon: TrendingUp,
-    },
+    // {
+    //   title: "Teams",
+    //   url: "/dashboard/teams",
+    //   icon: Users,
+    //   isActive: false,
+    // },
+    // {
+    //   title: "Players",
+    //   url: "/dashboard/players",
+    //   icon: UserCheck,
+    //   isActive: false,
+    // },
+    // {
+    //   title: "Divisions",
+    //   url: "/dashboard/divisions",
+    //   icon: Trophy,
+    //   isActive: false,
+    // },
+    // {
+    //   title: "Reports",
+    //   url: "/dashboard/reports",
+    //   icon: BarChart3,
+    //   isActive: false,
+    // },
+    // {
+    //   title: "Export",
+    //   url: "/dashboard/export",
+    //   icon: Download,
+    //   isActive: false,
+    // },
+    // {
+    //   title: "Statistics",
+    //   url: "/dashboard/statistics",
+    //   icon: TrendingUp,
+    //   isActive: false,
+    // },
   ],
 };
 
@@ -125,12 +127,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavSection title="Core Management" items={data.coreManagement} />
-        <NavSection title="Tournament Operations" items={data.tournamentOps} />
-        <NavSection title="Administrative" items={data.adminFunctions} />
-        <NavSection title="Analytics & Reporting" items={data.analytics} />
-        <NavSection title="System Management" items={data.systemManagement} />
-        <NavSection title="Support & Tools" items={data.supportTools} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
