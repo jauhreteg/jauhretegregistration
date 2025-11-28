@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/contexts/theme-context";
 
 interface FormNavigationProps {
   currentStep: number;
@@ -28,8 +27,6 @@ export function FormNavigation({
   hideStepCounter = false,
   customSubmitText,
 }: FormNavigationProps) {
-  const { isDarkMode } = useTheme();
-
   return (
     <div className="flex justify-between items-center font-montserrat">
       <div className="flex items-center gap-2 text-sm text-gray-600 font-montserrat">
@@ -47,7 +44,7 @@ export function FormNavigation({
             variant="outline"
             disabled={isSubmitting}
             className={`px-8 uppercase font-montserrat ${
-              isDarkMode
+              false
                 ? "border-gray-600 text-gray-300 hover:bg-gray-800"
                 : "border-gray-300 text-gray-700 hover:bg-gray-50"
             }`}
@@ -61,7 +58,7 @@ export function FormNavigation({
             onClick={onNext}
             disabled={isSubmitting}
             className={`px-8 uppercase font-montserrat transition-all duration-200 ${
-              isDarkMode
+              false
                 ? "bg-[#F5A623] text-black hover:bg-white hover:text-black"
                 : "bg-[#F5A623] text-white hover:bg-black hover:text-white"
             }`}
@@ -75,7 +72,7 @@ export function FormNavigation({
             onClick={onSubmit}
             disabled={isSubmitting}
             className={`px-8 uppercase font-montserrat transition-all duration-200 ${
-              isDarkMode
+              false
                 ? "bg-[#F5A623] text-black hover:bg-white hover:text-black"
                 : "bg-[#F5A623] text-white hover:bg-black hover:text-white"
             }`}

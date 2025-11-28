@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import PlayerForm from "@/components/player-form";
-import TeamForm from "@/components/team-form";
-import { BackupPlayerDecision } from "@/components/backup-player-decision";
-import { DivisionSelection } from "@/components/division-selection";
-import { FormLayout } from "@/components/form-layout";
-import { RegistrationSuccess } from "@/components/registration-success";
+import PlayerForm from "./_components/player-form";
+import TeamForm from "./_components/team-form";
+import { BackupPlayerDecision } from "./_components/backup-player-decision";
+import { DivisionSelection } from "./_components/division-selection";
+import { FormLayout } from "./_components/form-layout";
+import { RegistrationSuccess } from "./_components/registration-success";
 
 import { isFieldRequired } from "@/config/form-config";
 import { getPlayerData, getTeamData, getPlayerNames } from "@/utils/form-utils";
@@ -71,7 +71,7 @@ export default function RegisterPage() {
   // Player form handlers
   const handlePlayerFieldChange = (
     field: string,
-    value: string | File | null
+    value: string | File | File[] | null
   ) => {
     handleFieldChange(field, value);
   };

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useTheme } from "@/contexts/theme-context";
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
 
@@ -14,7 +13,6 @@ export function RegistrationSuccess({
   registrationToken,
   onComplete,
 }: RegistrationSuccessProps) {
-  const { isDarkMode } = useTheme();
   const [copied, setCopied] = useState(false);
 
   const handleCopyToken = async () => {
@@ -51,11 +49,7 @@ export function RegistrationSuccess({
           Registration Complete!
         </h1>
 
-        <p
-          className={`text-lg font-montserrat max-w-2xl mx-auto ${
-            isDarkMode ? "text-gray-300" : "text-gray-600"
-          }`}
-        >
+        <p className="text-lg font-montserrat max-w-2xl mx-auto text-gray-600">
           Your registration has been successfully submitted and will be reviewed
           by the Jauhr-E-Teg team and the Ustad whose name was provided in your
           registration. We may contact you for additional information or
@@ -65,20 +59,11 @@ export function RegistrationSuccess({
 
       {/* Registration Token Section */}
       <div className="max-w-md mx-auto space-y-4">
-        <h2
-          className={`text-xl font-semibold font-montserrat ${
-            isDarkMode ? "text-gray-200" : "text-gray-800"
-          }`}
-        >
+        <h2 className="text-xl font-semibold font-montserrat text-gray-800">
           Your Registration Token
         </h2>
 
-        <div
-          className={`
-            p-6 rounded-lg border-2 border-dashed border-[#F5A623] 
-            ${isDarkMode ? "bg-gray-900/50" : "bg-[#F5A623]/5"}
-          `}
-        >
+        <div className="p-6 rounded-lg border-2 border-dashed border-[#F5A623] bg-[#F5A623]/5">
           <div className="flex items-center justify-between">
             <span className="font-mono font-bold text-[#F5A623] text-2xl">
               {registrationToken}
@@ -87,10 +72,7 @@ export function RegistrationSuccess({
               onClick={handleCopyToken}
               variant="ghost"
               size="sm"
-              className={`
-                ml-4 text-[#F5A623] hover:text-[#F5A623] 
-                ${isDarkMode ? "hover:bg-gray-800" : "hover:bg-[#F5A623]/10"}
-              `}
+              className="ml-4 text-[#F5A623] hover:text-[#F5A623] hover:bg-[#F5A623]/10"
             >
               {copied ? (
                 <Check className="w-5 h-5" />
@@ -101,11 +83,7 @@ export function RegistrationSuccess({
           </div>
         </div>
 
-        <p
-          className={`text-sm font-montserrat ${
-            isDarkMode ? "text-gray-400" : "text-gray-500"
-          }`}
-        >
+        <p className="text-sm font-montserrat text-gray-500">
           Please save this token - you'll need it to make changes to your
           registration later.
         </p>

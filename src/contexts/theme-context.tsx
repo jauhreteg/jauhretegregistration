@@ -13,7 +13,7 @@ type Theme = "light" | "dark";
 type ThemeMode = "light" | "dark" | "system";
 
 interface ThemeContextType {
-  isDarkMode: boolean;
+  false: boolean;
   theme: Theme;
   themeMode: ThemeMode;
   toggleTheme: () => void;
@@ -151,7 +151,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const value = {
-    isDarkMode: theme === "dark",
+    false: theme === "dark",
     theme,
     themeMode,
     toggleTheme,

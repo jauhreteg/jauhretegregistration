@@ -6,7 +6,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTheme } from "@/contexts/theme-context";
 
 interface BackupPlayerDecisionProps {
   value: boolean | null;
@@ -31,8 +30,6 @@ export function BackupPlayerDecision({
   onValueChange,
   isRequired = () => false,
 }: BackupPlayerDecisionProps) {
-  const { isDarkMode } = useTheme();
-
   return (
     <div className="space-y-6 font-montserrat">
       <h2 className="text-xl font-bold uppercase mb-6 font-montserrat">
@@ -50,9 +47,7 @@ export function BackupPlayerDecision({
 
         <div
           className={`p-4 rounded-lg ${
-            isDarkMode
-              ? "bg-gray-800 text-gray-300"
-              : "bg-gray-50 text-gray-600"
+            false ? "bg-gray-800 text-gray-300" : "bg-gray-50 text-gray-600"
           }`}
         >
           <p className="text-sm leading-relaxed mb-2 font-montserrat">
@@ -89,7 +84,7 @@ export function BackupPlayerDecision({
           >
             <SelectTrigger
               className={`w-full ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white"
                   : "border-gray-300 bg-white text-gray-900"
               }`}
@@ -98,7 +93,7 @@ export function BackupPlayerDecision({
             </SelectTrigger>
             <SelectContent
               className={`${
-                isDarkMode
+                false
                   ? "bg-gray-900 border-gray-600 text-white"
                   : "bg-white border-gray-300 text-gray-900"
               }`}

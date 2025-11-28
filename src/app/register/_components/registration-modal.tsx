@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useTheme } from "@/contexts/theme-context";
+
 import { ReactNode } from "react";
 
 interface ModalSectionProps {
@@ -39,31 +39,21 @@ function ModalSection({
   onShowFullContent,
   fullContentButtonText,
 }: ModalSectionProps) {
-  const { isDarkMode } = useTheme();
-
   return (
-    <div
-      className={`space-y-3 p-4 border rounded-lg ${
-        isDarkMode ? "border-gray-600 bg-black" : "border-gray-200 bg-gray-50"
-      }`}
-    >
+    <div className="space-y-3 p-4 border rounded-lg border-gray-200 bg-gray-50">
       <h3 className="font-bold text-lg font-montserrat">{title}</h3>
       <div className="text-sm font-montserrat">{content}</div>
 
       {showFullContent && onShowFullContent && fullContentButtonText && (
         <button
           onClick={onShowFullContent}
-          className={`text-sm hover:underline font-medium font-montserrat ${
-            isDarkMode
-              ? "text-blue-400 hover:text-blue-300"
-              : "text-blue-600 hover:text-blue-700"
-          }`}
+          className="text-sm hover:underline font-medium font-montserrat text-blue-600 hover:text-blue-700"
         >
           {fullContentButtonText} →
         </button>
       )}
 
-      <div className="flex items-start gap-3 mt-4 p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+      <div className="flex items-start gap-3 mt-4 p-3 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors">
         <Checkbox
           id={`checkbox-${title.replace(/\s+/g, "-").toLowerCase()}`}
           checked={isAgreed}
@@ -88,8 +78,6 @@ export function RegistrationModal({
   onProceed,
   requireBothAgreements = true,
 }: RegistrationModalProps) {
-  const { isDarkMode } = useTheme();
-
   const canProceed = requireBothAgreements
     ? sections.every((section) => section.isAgreed)
     : sections.some((section) => section.isAgreed);
@@ -107,22 +95,12 @@ export function RegistrationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        className={`max-w-2xl max-h-[90vh] overflow-y-auto ${
-          isDarkMode
-            ? "bg-black text-white border-gray-700"
-            : "bg-white border-gray-200"
-        }`}
-      >
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-gray-200">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center font-montserrat">
             Before You Register
           </DialogTitle>
-          <DialogDescription
-            className={`text-center font-montserrat ${
-              isDarkMode ? "text-gray-300" : "text-gray-600"
-            }`}
-          >
+          <DialogDescription className="text-center font-montserrat text-gray-600">
             Please review and agree to the following requirements
           </DialogDescription>
         </DialogHeader>
@@ -133,19 +111,11 @@ export function RegistrationModal({
           ))}
 
           {/* Action Buttons */}
-          <div
-            className={`flex gap-4 justify-end pt-4 border-t ${
-              isDarkMode ? "border-gray-600" : "border-gray-200"
-            }`}
-          >
+          <div className="flex gap-4 justify-end pt-4 border-t border-gray-200">
             <Button
               variant="outline"
               onClick={onClose}
-              className={`uppercase font-montserrat border-red-500 text-red-500 hover:bg-red-500 hover:text-white ${
-                isDarkMode
-                  ? "border-red-400 text-red-400 hover:bg-red-400"
-                  : "border-red-500 text-red-500 hover:bg-red-500"
-              }`}
+              className="uppercase font-montserrat border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
             >
               Cancel
             </Button>
@@ -154,11 +124,7 @@ export function RegistrationModal({
               disabled={!canProceed}
               className={`uppercase font-montserrat transition-all duration-200 ${
                 canProceed
-                  ? `bg-[#F5A623] ${
-                      isDarkMode
-                        ? "text-black hover:bg-white hover:text-black"
-                        : "text-white hover:bg-black hover:text-white"
-                    }`
+                  ? "bg-[#F5A623] text-white hover:bg-black hover:text-white"
                   : "bg-gray-400 text-gray-600 cursor-not-allowed opacity-50"
               }`}
             >

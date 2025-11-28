@@ -5,11 +5,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import AnimatedBinaryBackground from "@/components/animated-binary-background";
-import { RegistrationModal } from "@/components/registration-modal";
+import { RegistrationModal } from "./register/_components/registration-modal";
 import { activeConfig } from "@/config/website";
-import { useTheme } from "@/contexts/theme-context";
-import ThemeSelector from "@/components/theme-selector";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -20,7 +18,6 @@ import { Button as UIButton } from "@/components/ui/button";
 
 export default function Home() {
   const router = useRouter();
-  const { isDarkMode } = useTheme();
   const [showModal, setShowModal] = useState(false);
   const [showFullRules, setShowFullRules] = useState(false);
   const [showFullDisclaimer, setShowFullDisclaimer] = useState(false);
@@ -47,8 +44,8 @@ export default function Home() {
       content: (
         <div>
           <p className="mb-2">
-            By registering, you agree that your team will follow all
-            competition rules including:
+            By registering, you agree that your team will follow all competition
+            rules including:
           </p>
           <ul className="list-disc pl-6 space-y-1 text-sm">
             <li>All players must be from the same Akhara</li>
@@ -57,8 +54,8 @@ export default function Home() {
             <li>Substitute player rules and restrictions</li>
           </ul>
           <p className="text-sm text-red-600 font-semibold mt-3">
-            Note: Your team will not be fully registered until your Ustad
-            and Jauhr E Teg sevadars approve your submission.
+            Note: Your team will not be fully registered until your Ustad and
+            Jauhr E Teg sevadars approve your submission.
           </p>
         </div>
       ),
@@ -74,12 +71,19 @@ export default function Home() {
       content: (
         <div>
           <p className="mb-2">
-            By participating in Jauhr E Teg activities, you acknowledge and accept:
+            By participating in Jauhr E Teg activities, you acknowledge and
+            accept:
           </p>
           <ul className="list-disc pl-6 space-y-1 text-sm">
-            <li>Gatka is a physical martial art with inherent risks of injury</li>
-            <li>You waive liability claims against organizers and volunteers</li>
-            <li>You assume all risks including injury, illness, or property damage</li>
+            <li>
+              Gatka is a physical martial art with inherent risks of injury
+            </li>
+            <li>
+              You waive liability claims against organizers and volunteers
+            </li>
+            <li>
+              You assume all risks including injury, illness, or property damage
+            </li>
             <li>This waiver is legally binding even in cases of negligence</li>
           </ul>
         </div>
@@ -94,22 +98,13 @@ export default function Home() {
   ];
 
   return (
-    <div
-      className={`min-h-screen ${
-        isDarkMode ? "bg-black text-white" : "bg-white text-gray-900"
-      }`}
-    >
+    <div className="min-h-screen bg-white text-gray-900">
       {/* Animated Binary Background */}
       {activeConfig.background.enableBinaryAnimation && (
         <AnimatedBinaryBackground
           textToConvert={activeConfig.background.binaryText}
-          textColor={
-            isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)"
-          }
-          glowColors={[
-            isDarkMode ? "rgba(255, 255, 255, 0.8)" : "rgba(245, 166, 35, 0.8)",
-            isDarkMode ? "rgba(245, 166, 35, 0.8)" : "rgba(0, 0, 0, 0.8)",
-          ]}
+          textColor="rgba(0, 0, 0, 0.05)"
+          glowColors={["rgba(245, 166, 35, 0.8)", "rgba(0, 0, 0, 0.8)"]}
           fontSize="10px"
           glowIntensity={activeConfig.background.glowIntensity}
           glowInterval={activeConfig.background.animationSpeed}
@@ -117,11 +112,6 @@ export default function Home() {
           enableRadialFade={activeConfig.background.enableRadialFade}
         />
       )}
-
-      {/* Theme Selector - Bottom Right */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <ThemeSelector />
-      </div>
 
       {/* Main Content - Centered */}
       <div className="flex items-center justify-center min-h-screen p-8">
@@ -141,10 +131,6 @@ export default function Home() {
                 activeConfig.effects.enableFastTransitions
                   ? "duration-75"
                   : "duration-300"
-              } ${
-                isDarkMode && activeConfig.effects.enableLogoInversion
-                  ? "invert"
-                  : ""
               }`}
             />
           </div>
@@ -164,18 +150,10 @@ export default function Home() {
                 activeConfig.effects.enableFastTransitions
                   ? "duration-75"
                   : "duration-300"
-              } font-montserrat ${
-                isDarkMode
-                  ? `bg-white text-black ${
-                      activeConfig.effects.enableButtonHoverAnimation
-                        ? "hover:bg-[#F5A623] hover:text-white"
-                        : ""
-                    }`
-                  : `bg-black text-white ${
-                      activeConfig.effects.enableButtonHoverAnimation
-                        ? "hover:bg-[#F5A623] hover:text-white"
-                        : ""
-                    }`
+              } font-montserrat bg-black text-white ${
+                activeConfig.effects.enableButtonHoverAnimation
+                  ? "hover:bg-[#F5A623] hover:text-white"
+                  : ""
               }`}
             >
               START REGISTRATION
@@ -192,7 +170,7 @@ export default function Home() {
               activeConfig.effects.enableFastTransitions
                 ? "duration-75"
                 : "duration-300"
-            } ${isDarkMode ? "text-white" : "text-black"}`}
+            } text-black`}
           >
             © 2017-{new Date().getFullYear()} Jauhr E Teg
           </p>
@@ -210,11 +188,7 @@ export default function Home() {
 
       {/* Full Rules Dialog */}
       <Dialog open={showFullRules} onOpenChange={setShowFullRules}>
-        <DialogContent
-          className={`max-w-4xl max-h-[90vh] overflow-y-auto ${
-            isDarkMode ? "bg-black text-white" : "bg-white"
-          }`}
-        >
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold font-montserrat">
               Registration Requirements
@@ -269,11 +243,7 @@ export default function Home() {
               you will receive an email of approval or denial.
             </p>
 
-            <div
-              className={`flex justify-end pt-4 border-t ${
-                isDarkMode ? "border-gray-600" : "border-gray-200"
-              }`}
-            >
+            <div className="flex justify-end pt-4 border-t border-gray-200">
               <UIButton
                 onClick={() => setShowFullRules(false)}
                 className="uppercase font-montserrat"
@@ -287,11 +257,7 @@ export default function Home() {
 
       {/* Full Disclaimer Dialog */}
       <Dialog open={showFullDisclaimer} onOpenChange={setShowFullDisclaimer}>
-        <DialogContent
-          className={`max-w-4xl max-h-[90vh] overflow-y-auto ${
-            isDarkMode ? "bg-black text-white" : "bg-white"
-          }`}
-        >
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold font-montserrat">
               MEDICAL DISCLAIMER
@@ -371,11 +337,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div
-              className={`flex justify-end pt-4 border-t ${
-                isDarkMode ? "border-gray-600" : "border-gray-200"
-              }`}
-            >
+            <div className="flex justify-end pt-4 border-t border-gray-200">
               <UIButton
                 onClick={() => setShowFullDisclaimer(false)}
                 className="uppercase font-montserrat"

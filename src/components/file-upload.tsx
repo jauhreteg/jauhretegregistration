@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
-import { useTheme } from "@/contexts/theme-context";
 
 interface FileUploadProps {
   id: string;
@@ -37,7 +36,6 @@ export function FileUpload({
   maxFiles,
   className = "",
 }: FileUploadProps) {
-  const { isDarkMode } = useTheme();
   const [dragOver, setDragOver] = useState(false);
 
   // Convert value to array for consistent handling
@@ -124,19 +122,13 @@ export function FileUpload({
       </Label>
 
       {description && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 font-montserrat">
-          {description}
-        </p>
+        <p className="text-sm text-gray-600 font-montserrat">{description}</p>
       )}
 
       <div
         className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
           dragOver
-            ? isDarkMode
-              ? "border-gray-400 bg-gray-700"
-              : "border-gray-400 bg-gray-100"
-            : isDarkMode
-            ? "border-gray-600 bg-gray-800"
+            ? "border-gray-400 bg-gray-100"
             : "border-gray-300 bg-gray-50"
         }`}
         onDragOver={handleDragOver}
@@ -178,7 +170,7 @@ export function FileUpload({
               <div
                 key={`${file.name}-${index}`}
                 className={`flex items-center justify-between p-2 rounded-md ${
-                  isDarkMode
+                  false
                     ? "bg-gray-700 text-gray-300"
                     : "bg-gray-100 text-gray-700"
                 }`}
@@ -195,7 +187,7 @@ export function FileUpload({
                     variant="ghost"
                     size="sm"
                     onClick={() => removeFile(index)}
-                    className="ml-2 h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900"
+                    className="ml-2 h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100"
                   >
                     <X className="h-4 w-4" />
                   </Button>

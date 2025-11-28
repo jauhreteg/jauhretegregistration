@@ -13,7 +13,6 @@ import {
 import { DatePicker } from "@/components/date-picker";
 import { format } from "date-fns";
 import { FileUpload } from "@/components/file-upload";
-import { useTheme } from "@/contexts/theme-context";
 
 // Country codes data
 const COUNTRY_CODES = [
@@ -150,7 +149,7 @@ interface PlayerFormProps {
   playerType: PlayerType;
   playerData: PlayerData;
   validationErrors: Record<string, string | undefined>;
-  onFieldChange: (field: string, value: string | File | null) => void;
+  onFieldChange: (field: string, value: string | File | File[] | null) => void;
   onValidationError: (field: string, error: string | undefined) => void;
   isRequired?: (fieldName: string) => boolean;
   division?: string;
@@ -177,8 +176,6 @@ export default function PlayerForm({
   isRequired = () => false,
   division,
 }: PlayerFormProps) {
-  const { isDarkMode } = useTheme();
-
   // Helper to determine if proof of age is required based on division
   const isProofOfAgeRequired = () => {
     if (!division) return true; // Show by default if no division selected
@@ -206,7 +203,7 @@ export default function PlayerForm({
   // Enhanced field change handler with validation
   const handleFieldChange = (
     field: keyof PlayerData,
-    value: string | File | null
+    value: string | File | File[] | null
   ) => {
     const fieldName = getFieldName(field);
     onFieldChange(fieldName, value);
@@ -289,7 +286,7 @@ export default function PlayerForm({
               onChange={(e) => handleFieldChange("firstName", e.target.value)}
               placeholder="First name"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -310,7 +307,7 @@ export default function PlayerForm({
               onChange={(e) => handleFieldChange("middleName", e.target.value)}
               placeholder="Middle name (optional)"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -332,7 +329,7 @@ export default function PlayerForm({
               value={playerData.lastName}
               onChange={(e) => handleFieldChange("lastName", e.target.value)}
               className={`h-10 font-montserrat ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:border-gray-500"
               }`}
@@ -354,7 +351,7 @@ export default function PlayerForm({
           >
             <SelectTrigger
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -363,7 +360,7 @@ export default function PlayerForm({
             </SelectTrigger>
             <SelectContent
               className={`${
-                isDarkMode
+                false
                   ? "bg-gray-900 border-gray-600 text-white"
                   : "bg-white border-gray-300 text-gray-900"
               }`}
@@ -399,12 +396,11 @@ export default function PlayerForm({
               }
               onChange={(date) => {
                 const formattedDate = date ? format(date, "yyyy-MM-dd") : "";
-                const fieldName = getFieldName("dob");
-                handleFieldChange(fieldName, formattedDate);
+                handleFieldChange("dob", formattedDate);
               }}
               placeholder="Pick a date"
               className={
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 hover:bg-gray-700 focus:border-gray-400"
                   : "border-gray-300 bg-white hover:bg-gray-50 focus:border-gray-500"
               }
@@ -451,7 +447,7 @@ export default function PlayerForm({
             className={`h-10 ${
               validationErrors[getFieldName("email")]
                 ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                : isDarkMode
+                : false
                 ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                 : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
             }`}
@@ -478,7 +474,7 @@ export default function PlayerForm({
             >
               <SelectTrigger
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -487,7 +483,7 @@ export default function PlayerForm({
               </SelectTrigger>
               <SelectContent
                 className={`max-h-60 overflow-y-auto w-80 ${
-                  isDarkMode
+                  false
                     ? "bg-gray-900 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 }`}
@@ -531,7 +527,7 @@ export default function PlayerForm({
                 className={`h-10 ${
                   validationErrors[getFieldName("phone")]
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                    : isDarkMode
+                    : false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -570,7 +566,7 @@ export default function PlayerForm({
               }
               placeholder="First name"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -593,7 +589,7 @@ export default function PlayerForm({
               }
               placeholder="Middle name (optional)"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -616,7 +612,7 @@ export default function PlayerForm({
               }
               placeholder="Last name"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -640,7 +636,7 @@ export default function PlayerForm({
             >
               <SelectTrigger
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -649,7 +645,7 @@ export default function PlayerForm({
               </SelectTrigger>
               <SelectContent
                 className={`max-h-60 overflow-y-auto w-80 ${
-                  isDarkMode
+                  false
                     ? "bg-gray-900 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 }`}
@@ -695,7 +691,7 @@ export default function PlayerForm({
                 className={`h-10 ${
                   validationErrors[getFieldName("emergencyContactPhone")]
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                    : isDarkMode
+                    : false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -718,9 +714,7 @@ export default function PlayerForm({
 
         {/* Father Information */}
         <div className="space-y-2">
-          <h4 className="font-medium text-gray-700 dark:text-gray-300">
-            Father Name
-          </h4>
+          <h4 className="font-medium text-gray-700">Father Name</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor={getFieldName("fatherFirstName")}>
@@ -738,7 +732,7 @@ export default function PlayerForm({
                 }
                 placeholder="First name"
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -761,7 +755,7 @@ export default function PlayerForm({
                 }
                 placeholder="Middle name (optional)"
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -784,7 +778,7 @@ export default function PlayerForm({
                 }
                 placeholder="Last name"
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -795,9 +789,7 @@ export default function PlayerForm({
 
         {/* Mother Information */}
         <div className="space-y-2">
-          <h4 className="font-medium text-gray-700 dark:text-gray-300">
-            Mother Name
-          </h4>
+          <h4 className="font-medium text-gray-700">Mother Name</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor={getFieldName("motherFirstName")}>
@@ -815,7 +807,7 @@ export default function PlayerForm({
                 }
                 placeholder="First name"
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -838,7 +830,7 @@ export default function PlayerForm({
                 }
                 placeholder="Middle name (optional)"
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -861,7 +853,7 @@ export default function PlayerForm({
                 }
                 placeholder="Last name"
                 className={`h-10 ${
-                  isDarkMode
+                  false
                     ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                     : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
                 }`}
@@ -891,7 +883,7 @@ export default function PlayerForm({
               onChange={(e) => handleFieldChange("pindVillage", e.target.value)}
               placeholder="Place of residence"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
@@ -916,7 +908,7 @@ export default function PlayerForm({
               }
               placeholder="Years of experience"
               className={`h-10 ${
-                isDarkMode
+                false
                   ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
                   : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
               }`}
