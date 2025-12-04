@@ -48,8 +48,8 @@ export interface WebsiteConfig {
 // Default configuration - modify these values to change website behavior
 export const websiteConfig: WebsiteConfig = {
   background: {
-    enableBinaryAnimation: false,
-    enableRadialFade: false,
+    enableBinaryAnimation: true,
+    enableRadialFade: true,
     binaryText: "JAUHR E TEG",
     animationSpeed: 200,
     glowIntensity: 8,

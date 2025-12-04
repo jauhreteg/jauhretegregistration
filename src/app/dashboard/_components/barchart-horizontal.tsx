@@ -128,7 +128,7 @@ export function BarChartHorizontal({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           {icon}
           {title}
@@ -142,7 +142,8 @@ export function BarChartHorizontal({
             data={processedData}
             layout="vertical"
             margin={{
-              right: 16,
+              right: 15,
+              left: 0,
               top: 10,
               bottom: 10,
             }}
@@ -173,7 +174,7 @@ export function BarChartHorizontal({
               <LabelList
                 dataKey="count"
                 position="right"
-                offset={8}
+                offset={4}
                 className="fill-foreground"
                 fontSize={11}
               />
@@ -181,7 +182,7 @@ export function BarChartHorizontal({
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
+      <CardFooter className="flex-col items-start gap-1 text-sm pt-0 pb-4">
         <div className="text-muted-foreground leading-none">
           Total teams: {data.reduce((sum, item) => sum + item.count, 0)}{" "}
           registered across {data.length} cities (showing top{" "}
