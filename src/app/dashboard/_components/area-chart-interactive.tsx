@@ -69,11 +69,11 @@ const registrationData = [
 const chartConfig = {
   registrations: {
     label: "Daily Registrations",
-    color: "var(--chart-1)",
+    color: "#3b82f6", // Blue - for daily registrations
   },
   cumulative: {
     label: "Cumulative Total",
-    color: "var(--chart-2)",
+    color: "#10b981", // Green - for cumulative growth
   },
 } satisfies ChartConfig;
 
@@ -172,28 +172,12 @@ export function AreaChartInteractive({
                 x2="0"
                 y2="1"
               >
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-registrations)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-registrations)"
-                  stopOpacity={0.1}
-                />
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.6} />
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05} />
               </linearGradient>
               <linearGradient id="fillCumulative" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-cumulative)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-cumulative)"
-                  stopOpacity={0.1}
-                />
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.6} />
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
@@ -213,31 +197,60 @@ export function AreaChartInteractive({
             />
             <ChartTooltip
               cursor={false}
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    });
-                  }}
-                  indicator="dot"
-                />
-              }
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="rounded-lg border bg-background p-3 shadow-md">
+                      <div className="font-medium mb-2">
+                        {new Date(label).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </div>
+                      <div className="space-y-1">
+                        {payload.map((entry, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <div
+                              className="h-3 w-3 rounded-full"
+                              style={{
+                                backgroundColor: entry.stroke || entry.color,
+                              }}
+                            />
+                            <span className="text-muted-foreground">
+                              {entry.dataKey === "registrations"
+                                ? "Daily Registrations"
+                                : "Cumulative Total"}
+                            </span>
+                            <span className="font-medium ml-auto">
+                              {entry.value}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              }}
             />
             <Area
               dataKey="registrations"
               type="natural"
               fill="url(#fillRegistrations)"
-              stroke="var(--color-registrations)"
+              stroke="#3b82f6"
+              strokeWidth={2}
               stackId="a"
             />
             <Area
               dataKey="cumulative"
               type="natural"
               fill="url(#fillCumulative)"
-              stroke="var(--color-cumulative)"
+              stroke="#10b981"
+              strokeWidth={2}
               stackId="b"
             />
           </AreaChart>

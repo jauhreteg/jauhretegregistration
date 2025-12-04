@@ -52,42 +52,6 @@ const navMain = [
     icon: FileText,
     isActive: false,
   },
-  // {
-  //   title: "Teams",
-  //   url: "/dashboard/teams",
-  //   icon: Users,
-  //   isActive: false,
-  // },
-  // {
-  //   title: "Players",
-  //   url: "/dashboard/players",
-  //   icon: UserCheck,
-  //   isActive: false,
-  // },
-  // {
-  //   title: "Divisions",
-  //   url: "/dashboard/divisions",
-  //   icon: Trophy,
-  //   isActive: false,
-  // },
-  // {
-  //   title: "Reports",
-  //   url: "/dashboard/reports",
-  //   icon: BarChart3,
-  //   isActive: false,
-  // },
-  // {
-  //   title: "Export",
-  //   url: "/dashboard/export",
-  //   icon: Download,
-  //   isActive: false,
-  // },
-  // {
-  //   title: "Statistics",
-  //   url: "/dashboard/statistics",
-  //   icon: TrendingUp,
-  //   isActive: false,
-  // },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

@@ -163,13 +163,21 @@ export function BarChartHorizontal({
               cursor={false}
               content={<ChartTooltipContent indicator="line" />}
             />
-            <Bar dataKey="count" fill={barColor} radius={2}>
+            <defs>
+              <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#ffc470" stopOpacity={0.9} />
+                <stop offset="50%" stopColor="#ffb347" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#faa022" stopOpacity={0.7} />
+              </linearGradient>
+            </defs>
+            <Bar dataKey="count" fill="url(#barGradient)" radius={4}>
               <LabelList
                 dataKey="city"
                 position="insideLeft"
                 offset={8}
-                style={{ fill: labelColor }}
+                style={{ fill: "#000000" }}
                 fontSize={11}
+                fontWeight="500"
               />
               <LabelList
                 dataKey="count"
@@ -177,6 +185,7 @@ export function BarChartHorizontal({
                 offset={4}
                 className="fill-foreground"
                 fontSize={11}
+                fontWeight="500"
               />
             </Bar>
           </BarChart>

@@ -165,7 +165,7 @@ export default function Page() {
             {/* Left Side - City Breakdown Chart */}
             <BarChartHorizontal
               data={mockData.cityBreakdown}
-              barColor="#000000"
+              barColor="url(#barGradient)"
               labelColor="#ffffff"
               title="Registrations by City"
               description="Geographic distribution of team registrations (top 10)"
@@ -190,21 +190,6 @@ export default function Page() {
             maxItems={5}
             icon={<FileText className="h-5 w-5" />}
           />
-
-          {/* Copyright Footer */}
-          <div className="mt-8 pt-6 border-t border-border">
-            <div className="text-center text-sm text-muted-foreground">
-              <ScrambledText
-                radius={40}
-                speed={0.7}
-                scrambleChars="!@#$%^&*()_+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-                className="inline-block"
-              >
-                © 2017-{new Date().getFullYear().toString()} Jauhr E Teg. All
-                rights reserved.
-              </ScrambledText>
-            </div>
-          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

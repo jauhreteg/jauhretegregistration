@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button as UIButton } from "@/components/ui/button";
+import ScrambledText from "@/components/ui/scrambled-text";
 
 export default function Home() {
   const router = useRouter();
@@ -180,15 +181,22 @@ export default function Home() {
       {/* Copyright Text */}
       {activeConfig.layout.showCopyrightText && (
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-          <p
+          <div
             className={`text-xs text-center opacity-20 transition-colors font-montserrat ${
               activeConfig.effects.enableFastTransitions
                 ? "duration-75"
                 : "duration-300"
             } text-black`}
           >
-            © 2017-{new Date().getFullYear()} Jauhr E Teg
-          </p>
+            <ScrambledText
+              radius={40}
+              speed={0.7}
+              scrambleChars="!@#$%^&*()_+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+              className="inline-block"
+            >
+              © 2017-{new Date().getFullYear()} Jauhr E Teg
+            </ScrambledText>
+          </div>
         </div>
       )}
 
