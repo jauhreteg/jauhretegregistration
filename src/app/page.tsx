@@ -98,7 +98,22 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-white text-gray-900 relative">
+      {/* Admin Login Button - Top Right */}
+      <div className="absolute top-4 right-4 z-20">
+        <Button
+          onClick={() => router.push("/admin/login")}
+          variant="outline"
+          className={`px-4 py-2 text-xs font-semibold uppercase rounded-lg transition-colors ${
+            activeConfig.effects.enableFastTransitions
+              ? "duration-75"
+              : "duration-300"
+          } font-montserrat border-black text-black hover:bg-black hover:text-white`}
+        >
+          Admin Login
+        </Button>
+      </div>
+
       {/* Animated Binary Background */}
       {activeConfig.background.enableBinaryAnimation && (
         <AnimatedBinaryBackground

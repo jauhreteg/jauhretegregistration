@@ -1,6 +1,7 @@
 "use client";
 
 import { LogOut, User } from "lucide-react";
+import { signOut } from "@/app/auth/actions";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -14,11 +15,8 @@ export function NavUser({
     avatar: string;
   };
 }) {
-  const handleLogout = () => {
-    // Add your logout logic here
-    // For example: signOut(), clear localStorage, redirect, etc.
-    console.log("Logging out...");
-    // window.location.href = "/login";
+  const handleLogout = async () => {
+    await signOut();
   };
 
   return (
@@ -32,7 +30,7 @@ export function NavUser({
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-medium">{user.name}</span>
-            <span className="truncate text-xs">{user.email}</span>
+            <span className="truncate text-[10px]">{user.email}</span>
           </div>
           <button
             onClick={handleLogout}

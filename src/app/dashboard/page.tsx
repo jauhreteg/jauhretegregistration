@@ -19,6 +19,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import ScrambledText from "@/components/ui/scrambled-text";
 
 import {
   Users,
@@ -65,38 +66,48 @@ const mockData = {
   recentRegistrations: [
     {
       id: "REG-2024-001",
-      teamName: "Thunder Hawks",
-      submitDate: "2024-11-25",
-      status: "pending",
-      city: "Vancouver",
+      registrationDate: "2024-11-25",
+      teamName: "Baba Surjit Singh Ji 96Crori Budha Dal",
+      akhara: "Singh Sabha Akhara Vancouver Gurdwara",
+      ustaad: "Gurdeep Singh Khalsa",
+      location: "Vancouver",
+      status: "new submission",
     },
     {
       id: "REG-2024-002",
+      registrationDate: "2024-11-24",
       teamName: "Lightning Bolts",
-      submitDate: "2024-11-24",
+      akhara: "Khalsa Akhara",
+      ustaad: "Harpreet Kaur",
+      location: "Toronto",
       status: "approved",
-      city: "Toronto",
     },
     {
       id: "REG-2024-003",
+      registrationDate: "2024-11-23",
       teamName: "Storm Riders",
-      submitDate: "2024-11-23",
-      status: "pending",
-      city: "Calgary",
+      akhara: "Dashmesh Akhara",
+      ustaad: "Jasbir Singh",
+      location: "Calgary",
+      status: "in review",
     },
     {
       id: "REG-2024-004",
+      registrationDate: "2024-11-22",
       teamName: "Wind Runners",
-      submitDate: "2024-11-22",
-      status: "approved",
-      city: "Montreal",
+      akhara: "Guru Gobind Akhara",
+      ustaad: "Simran Kaur",
+      location: "Montreal",
+      status: "information requested",
     },
     {
       id: "REG-2024-005",
+      registrationDate: "2024-11-21",
       teamName: "Fire Eagles",
-      submitDate: "2024-11-21",
+      akhara: "Nihangs Akhara",
+      ustaad: "Baljit Singh",
+      location: "Ottawa",
       status: "denied",
-      city: "Ottawa",
     },
   ],
 };
@@ -179,6 +190,21 @@ export default function Page() {
             maxItems={5}
             icon={<FileText className="h-5 w-5" />}
           />
+
+          {/* Copyright Footer */}
+          <div className="mt-8 pt-6 border-t border-border">
+            <div className="text-center text-sm text-muted-foreground">
+              <ScrambledText
+                radius={40}
+                speed={0.7}
+                scrambleChars="!@#$%^&*()_+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+                className="inline-block"
+              >
+                © 2017-{new Date().getFullYear().toString()} Jauhr E Teg. All
+                rights reserved.
+              </ScrambledText>
+            </div>
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

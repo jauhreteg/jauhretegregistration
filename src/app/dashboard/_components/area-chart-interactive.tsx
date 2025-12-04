@@ -104,9 +104,33 @@ export function AreaChartInteractive({
     return date >= startDate;
   });
 
+  // Calculate average registrations per day for the selected period
+  const averageStats = React.useMemo(() => {
+    const totalRegistrations = filteredData.reduce(
+      (sum, item) => sum + item.registrations,
+      0
+    );
+    const totalDays = filteredData.length;
+    const averagePerDay = totalDays > 0 ? totalRegistrations / totalDays : 0;
+
+    const periodName =
+      timeRange === "7d"
+        ? "7 days"
+        : timeRange === "30d"
+        ? "30 days"
+        : "3 months";
+
+    return {
+      average: averagePerDay,
+      total: totalRegistrations,
+      days: totalDays,
+      period: periodName,
+    };
+  }, [filteredData, timeRange]);
+
   return (
     <Card className="pt-0">
-      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-3 sm:flex-row">
         <div className="grid flex-1 gap-1">
           <CardTitle className="flex items-center gap-2">
             {icon}
@@ -134,10 +158,10 @@ export function AreaChartInteractive({
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent className="px-2 pt-3 pb-4 sm:px-6 sm:pt-4">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[300px] w-full"
+          className="aspect-auto h-[250px] w-full"
         >
           <AreaChart data={filteredData}>
             <defs>
@@ -218,6 +242,15 @@ export function AreaChartInteractive({
             />
           </AreaChart>
         </ChartContainer>
+
+        {/* Simple Statistics Line */}
+        <div className="flex items-center gap-2 pt-2 mt-2 text-sm text-muted-foreground">
+          <TrendingUp className="h-4 w-4" />
+          <span>
+            Average: {averageStats.average.toFixed(1)} registrations/day over{" "}
+            {averageStats.period} ({averageStats.total} total)
+          </span>
+        </div>
       </CardContent>
     </Card>
   );
