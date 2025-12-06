@@ -55,18 +55,8 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const defaultCityData: CityData[] = [
-  { city: "Vancouver", count: 45 },
-  { city: "Toronto", count: 38 },
-  { city: "Calgary", count: 32 },
-  { city: "Montreal", count: 28 },
-  { city: "Ottawa", count: 24 },
-  { city: "Edmonton", count: 18 },
-  { city: "Other", count: 62 },
-];
-
 export function BarChartHorizontal({
-  data = defaultCityData,
+  data = [],
   barColor = "#000000",
   labelColor = "#ffffff",
   title = "Registrations by City",
@@ -142,12 +132,12 @@ export function BarChartHorizontal({
             data={processedData}
             layout="vertical"
             margin={{
-              right: 15,
-              left: 0,
-              top: 10,
-              bottom: 10,
+              right: 20,
+              left: 10,
+              top: 15,
+              bottom: 15,
             }}
-            barSize={barSize}
+            barSize={Math.min(45, Math.max(30, 250 / processedData.length))}
           >
             <CartesianGrid horizontal={false} />
             <YAxis
@@ -158,7 +148,12 @@ export function BarChartHorizontal({
               axisLine={false}
               hide
             />
-            <XAxis dataKey="count" type="number" hide />
+            <XAxis
+              dataKey="count"
+              type="number"
+              hide
+              domain={[0, (dataMax) => Math.ceil(dataMax * 1.1)]}
+            />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="line" />}
@@ -174,18 +169,18 @@ export function BarChartHorizontal({
               <LabelList
                 dataKey="city"
                 position="insideLeft"
-                offset={8}
+                offset={12}
                 style={{ fill: "#000000" }}
-                fontSize={11}
-                fontWeight="500"
+                fontSize={12}
+                fontWeight="600"
               />
               <LabelList
                 dataKey="count"
                 position="right"
-                offset={4}
+                offset={6}
                 className="fill-foreground"
-                fontSize={11}
-                fontWeight="500"
+                fontSize={12}
+                fontWeight="600"
               />
             </Bar>
           </BarChart>

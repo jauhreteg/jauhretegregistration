@@ -91,6 +91,9 @@ export interface Registration {
   backup_city: string | null;
   backup_gatka_experience: string | null;
 
+  // Admin Review
+  admin_notes: string | null;
+
   // Metadata
   created_at: string;
   updated_at: string;
@@ -135,6 +138,7 @@ export interface RegistrationSummary {
   team_location: string;
   player_order: string;
   backup_player: boolean;
+  admin_notes: string | null;
   team_photos_count: number;
   dob_proofs_count: number;
   created_at: string;

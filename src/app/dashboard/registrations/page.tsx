@@ -36,6 +36,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Search,
   Filter,
   Download,
@@ -53,86 +59,41 @@ import {
   HelpCircle,
   Archive,
 } from "lucide-react";
-import { StatusType, DivisionType } from "@/types/database";
+import { StatusType, DivisionType, Registration } from "@/types/database";
 import { StatCard } from "../_components/stat-card";
+import { RegistrationService } from "@/services/registrationService";
+import { PageHeader } from "@/components/PageHeader";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 
-// Registration interface based on database schema
-interface Registration {
-  id: string;
-  form_token: string;
-  submission_date_time: string;
-  last_updated: string;
-  team_name: string;
-  ustad_name: string | null;
-  team_location: string;
-  division: DivisionType;
-  status: StatusType;
-  participants?: number;
-}
+// Using Registration interface from database types
 
-// Mock data for demonstration
-const mockRegistrations: Registration[] = [
-  {
-    id: "1",
-    form_token: "jet-2024-001",
-    submission_date_time: "2024-01-15T10:30:00Z",
-    last_updated: "2024-01-20T14:15:00Z",
-    team_name: "Punjab Warriors",
-    ustad_name: "Giani Jasbir Singh",
-    team_location: "Punjab, India",
-    division: "Open Singhs",
-    status: "approved",
-    participants: 8,
-  },
-  {
-    id: "2",
-    form_token: "jet-2024-002",
-    submission_date_time: "2024-01-16T14:15:00Z",
-    last_updated: "2024-01-16T14:15:00Z",
-    team_name: "California Sikhs",
-    ustad_name: "Bhai Manpreet Singh",
-    team_location: "California, USA",
-    division: "Open Kaurs",
-    status: "new submission",
-    participants: 6,
-  },
-  {
-    id: "3",
-    form_token: "jet-2024-003",
-    submission_date_time: "2024-01-17T09:45:00Z",
-    last_updated: "2024-01-23T16:30:00Z",
-    team_name: "Toronto Tigers",
-    ustad_name: "Singh Sahib Baljit Singh",
-    team_location: "Toronto, Canada",
-    division: "Junior Singhs",
-    status: "in review",
-    participants: 12,
-  },
-  {
-    id: "4",
-    form_token: "jet-2024-004",
-    submission_date_time: "2024-01-18T16:20:00Z",
-    last_updated: "2024-01-24T11:45:00Z",
-    team_name: "UK United",
-    ustad_name: "Giani Harpreet Kaur",
-    team_location: "London, UK",
-    division: "Open Kaurs",
-    status: "approved",
-    participants: 10,
-  },
-  {
-    id: "5",
-    form_token: "jet-2024-005",
-    submission_date_time: "2024-01-19T11:00:00Z",
-    last_updated: "2024-01-25T09:20:00Z",
-    team_name: "Delhi Defenders",
-    ustad_name: "Sant Baba Kulwant Singh",
-    team_location: "Delhi, India",
-    division: "Junior Kaurs",
-    status: "denied",
-    participants: 7,
-  },
-];
+// TruncatedText component with tooltip functionality
+const TruncatedText = ({
+  text,
+  maxLength = 25,
+}: {
+  text: string;
+  maxLength?: number;
+}) => {
+  if (text.length <= maxLength) {
+    return <span>{text}</span>;
+  }
+
+  const truncated = text.substring(0, maxLength) + "...";
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="cursor-help">{truncated}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="max-w-xs">{text}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
 
 // StatusBadge component matching the existing dashboard implementation
 const StatusBadge = ({ status }: { status: StatusType }) => {
@@ -206,18 +167,51 @@ const StatusBadge = ({ status }: { status: StatusType }) => {
 
 export default function RegistrationsPage() {
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [divisionFilter, setDivisionFilter] = useState<string>("all");
   const [groupBy, setGroupBy] = useState<string>("none");
 
+  // Use real-time notifications hook
+  const { clearRegistrationNotifications } = useRealtimeNotifications();
+
   React.useEffect(() => {
     setMounted(true);
+
+    // Clear registration notifications when user visits this page
+    // This indicates they've "seen" the new registrations
+    clearRegistrationNotifications();
+
+    const fetchRegistrations = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const result = await RegistrationService.getAllRegistrations();
+
+        if (result.error) {
+          console.error("Error fetching registrations:", result.error);
+          setError("Failed to load registrations. Please try again.");
+        } else {
+          setRegistrations(result.data || []);
+        }
+      } catch (err) {
+        console.error("Unexpected error fetching registrations:", err);
+        setError("Failed to load registrations. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRegistrations();
   }, []);
 
   // Filter and search registrations
   const filteredRegistrations = useMemo(() => {
-    return mockRegistrations
+    return registrations
       .filter((registration) => {
         const matchesSearch =
           registration.team_name
@@ -244,11 +238,10 @@ export default function RegistrationsPage() {
       .sort((a, b) => {
         // Sort by latest updated date (most recent first)
         return (
-          new Date(b.last_updated).getTime() -
-          new Date(a.last_updated).getTime()
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
         );
       });
-  }, [searchTerm, statusFilter, divisionFilter]);
+  }, [registrations, searchTerm, statusFilter, divisionFilter]);
 
   // Group registrations
   const groupedRegistrations = useMemo(() => {
@@ -320,7 +313,7 @@ export default function RegistrationsPage() {
     return `${hours}:${minutesStr} ${ampm}`;
   };
 
-  if (!mounted) {
+  if (!mounted || loading) {
     return (
       <div className="flex-1 space-y-6 p-6">
         <div className="flex items-center justify-between">
@@ -331,6 +324,34 @@ export default function RegistrationsPage() {
             </p>
           </div>
         </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Registrations</h1>
+            <p className="text-muted-foreground">
+              Error loading registration data
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <XCircle className="h-12 w-12 text-red-500" />
+          <p className="text-lg font-medium text-red-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -338,37 +359,29 @@ export default function RegistrationsPage() {
   return (
     <div className="flex-1 space-y-6 p-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Registrations</h1>
-          <p className="text-muted-foreground">
-            Manage and review all tournament registrations
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <Button size="sm">
-            <Calendar className="mr-2 h-4 w-4" />
-            New Registration
-          </Button>
-        </div>
-      </div>
+      <PageHeader title="Registrations">
+        <Button variant="outline" size="sm">
+          <Download className="mr-2 h-4 w-4" />
+          Export
+        </Button>
+        <Button size="sm">
+          <Calendar className="mr-2 h-4 w-4" />
+          New Registration
+        </Button>
+      </PageHeader>
 
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatCard
           title="Total Registrations"
-          value={mockRegistrations.length}
+          value={registrations.length}
           description="All registration statuses"
           icon={FileText}
         />
         <StatCard
           title="Pending Review"
           value={
-            mockRegistrations.filter(
+            registrations.filter(
               (r) =>
                 r.status === "new submission" ||
                 r.status === "in review" ||
@@ -382,9 +395,7 @@ export default function RegistrationsPage() {
         />
         <StatCard
           title="Approved"
-          value={
-            mockRegistrations.filter((r) => r.status === "approved").length
-          }
+          value={registrations.filter((r) => r.status === "approved").length}
           description="Ready for tournament"
           icon={CheckCircle}
           iconColor="text-green-600"
@@ -392,7 +403,7 @@ export default function RegistrationsPage() {
         />
         <StatCard
           title="Denied"
-          value={mockRegistrations.filter((r) => r.status === "denied").length}
+          value={registrations.filter((r) => r.status === "denied").length}
           description="Not eligible"
           icon={XCircle}
           iconColor="text-red-600"
@@ -400,14 +411,29 @@ export default function RegistrationsPage() {
         />
         <StatCard
           title="Total Players"
-          value={mockRegistrations.reduce(
-            (sum, r) => sum + (r.participants || 0),
-            0
-          )}
-          description="From approved teams only"
+          value={registrations
+            .filter((r) => r.status === "approved")
+            .reduce((sum, r) => {
+              // Count actual players: 3 main players + 1 backup if exists
+              let playerCount = 3; // player1, player2, player3
+              if (r.backup_player && r.backup_name) {
+                playerCount += 1;
+              }
+              return sum + playerCount;
+            }, 0)}
+          description=""
           icon={Users}
           iconColor="text-blue-600"
           valueColor="text-2xl font-bold text-blue-600"
+          secondaryValue={registrations.reduce((sum, r) => {
+            // Count actual players: 3 main players + 1 backup if exists
+            let playerCount = 3; // player1, player2, player3
+            if (r.backup_player && r.backup_name) {
+              playerCount += 1;
+            }
+            return sum + playerCount;
+          }, 0)}
+          secondaryLabel="All registrations"
         />
       </div>
 
@@ -475,7 +501,7 @@ export default function RegistrationsPage() {
                 <SelectItem value="none">No Grouping</SelectItem>
                 <SelectItem value="status">Group by Status</SelectItem>
                 <SelectItem value="division">Group by Division</SelectItem>
-                <SelectItem value="location">Group by Country</SelectItem>
+                <SelectItem value="location">Group by Location</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -509,23 +535,30 @@ export default function RegistrationsPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Form Token</TableHead>
-                          <TableHead>Submission Date</TableHead>
-                          <TableHead>Last Updated</TableHead>
-                          <TableHead>Team Name</TableHead>
-                          <TableHead>Ustaad</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Division</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Players</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="w-36">Form Token</TableHead>
+                          <TableHead className="w-36">
+                            Submission Date
+                          </TableHead>
+                          <TableHead className="w-36">Last Updated</TableHead>
+                          <TableHead className="w-40">Team Name</TableHead>
+                          <TableHead className="w-40">Ustaad</TableHead>
+                          <TableHead className="w-36">Location</TableHead>
+                          <TableHead className="w-32">Division</TableHead>
+                          <TableHead className="w-36">Status</TableHead>
+                          <TableHead className="w-12 text-center">
+                            Players
+                          </TableHead>
+                          <TableHead className="w-12">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {registrations.map((registration) => (
                           <TableRow key={registration.id}>
                             <TableCell className="font-mono text-sm">
-                              {registration.form_token}
+                              <TruncatedText
+                                text={registration.form_token}
+                                maxLength={20}
+                              />
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col">
@@ -544,34 +577,51 @@ export default function RegistrationsPage() {
                             <TableCell>
                               <div className="flex flex-col">
                                 <span>
-                                  {formatDate(registration.last_updated)}
+                                  {formatDate(registration.updated_at)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  {formatTime(registration.last_updated)}
+                                  {formatTime(registration.updated_at)}
                                 </span>
                               </div>
                             </TableCell>
                             <TableCell className="font-medium">
-                              {registration.team_name}
+                              <TruncatedText
+                                text={registration.team_name}
+                                maxLength={30}
+                              />
                             </TableCell>
-                            <TableCell>
-                              {registration.ustad_name || (
+                            <TableCell className="w-48 max-w-48">
+                              {registration.ustad_name ? (
+                                <TruncatedText
+                                  text={registration.ustad_name}
+                                  maxLength={20}
+                                />
+                              ) : (
                                 <span className="text-muted-foreground italic">
                                   None
                                 </span>
                               )}
                             </TableCell>
-                            <TableCell>{registration.team_location}</TableCell>
+                            <TableCell>
+                              <TruncatedText
+                                text={registration.team_location}
+                                maxLength={25}
+                              />
+                            </TableCell>
                             <TableCell>
                               <Badge variant="outline">
                                 {registration.division}
                               </Badge>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="w-32">
                               <StatusBadge status={registration.status} />
                             </TableCell>
                             <TableCell className="text-center">
-                              {registration.participants || 0}
+                              {3 +
+                                (registration.backup_player &&
+                                registration.backup_name
+                                  ? 1
+                                  : 0)}
                             </TableCell>
                             <TableCell>
                               <DropdownMenu>

@@ -69,7 +69,11 @@ export async function submitRegistration(
     for (const fileInfo of files) {
       if (fileInfo.file) {
         console.log(`📤 Uploading ${fileInfo.type}...`);
-        const { url, error } = await uploadFile(fileInfo.file, fileInfo.type);
+        const { url, error } = await uploadFile(
+          fileInfo.file,
+          fileInfo.type,
+          formToken
+        );
 
         if (url) {
           // Create file metadata for database
