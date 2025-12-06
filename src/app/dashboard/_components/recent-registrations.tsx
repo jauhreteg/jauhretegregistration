@@ -31,19 +31,10 @@ import {
   XCircle,
   Archive,
 } from "lucide-react";
-
-interface RegistrationData {
-  id: string;
-  registrationDate: string;
-  teamName: string;
-  akhara: string;
-  ustaad: string;
-  location: string;
-  status: string;
-}
+import { Registration } from "@/types/database";
 
 interface RecentRegistrationsProps {
-  data: RegistrationData[];
+  data: Registration[];
   title?: string;
   description?: string;
   maxItems?: number;
@@ -202,10 +193,10 @@ export function RecentRegistrations({
           <TableHeader>
             <TableRow>
               <TableHead>Registration ID</TableHead>
-              <TableHead>Registration Date</TableHead>
+              <TableHead>Submission Date</TableHead>
               <TableHead>Team Name</TableHead>
-              <TableHead>Akhara</TableHead>
-              <TableHead>Ustaad</TableHead>
+              <TableHead>Division</TableHead>
+              <TableHead>Ustad</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
@@ -214,19 +205,26 @@ export function RecentRegistrations({
             {displayData.map((registration) => (
               <TableRow key={registration.id}>
                 <TableCell className="font-mono text-sm">
-                  {registration.id}
+                  {registration.form_token}
                 </TableCell>
-                <TableCell>{registration.registrationDate}</TableCell>
+                <TableCell>
+                  {new Date(
+                    registration.submission_date_time
+                  ).toLocaleDateString()}
+                </TableCell>
                 <TableCell className="font-medium">
-                  <TruncatedText text={registration.teamName} maxLength={30} />
+                  <TruncatedText text={registration.team_name} maxLength={30} />
                 </TableCell>
                 <TableCell>
-                  <TruncatedText text={registration.akhara} maxLength={25} />
+                  <TruncatedText text={registration.division} maxLength={25} />
                 </TableCell>
                 <TableCell>
-                  <TruncatedText text={registration.ustaad} maxLength={20} />
+                  <TruncatedText
+                    text={registration.ustad_name}
+                    maxLength={20}
+                  />
                 </TableCell>
-                <TableCell>{registration.location}</TableCell>
+                <TableCell>{registration.team_location}</TableCell>
                 <TableCell>
                   <StatusBadge status={registration.status} />
                 </TableCell>

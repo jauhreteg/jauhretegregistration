@@ -26,45 +26,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TrendingUp } from "lucide-react";
-
-// Mock registration data - replace with real API calls
-const registrationData = [
-  { date: "2024-09-01", registrations: 5, cumulative: 5 },
-  { date: "2024-09-02", registrations: 8, cumulative: 13 },
-  { date: "2024-09-03", registrations: 3, cumulative: 16 },
-  { date: "2024-09-04", registrations: 12, cumulative: 28 },
-  { date: "2024-09-05", registrations: 7, cumulative: 35 },
-  { date: "2024-09-06", registrations: 15, cumulative: 50 },
-  { date: "2024-09-07", registrations: 4, cumulative: 54 },
-  { date: "2024-09-08", registrations: 18, cumulative: 72 },
-  { date: "2024-09-09", registrations: 2, cumulative: 74 },
-  { date: "2024-09-10", registrations: 9, cumulative: 83 },
-  { date: "2024-09-11", registrations: 14, cumulative: 97 },
-  { date: "2024-09-12", registrations: 6, cumulative: 103 },
-  { date: "2024-09-13", registrations: 11, cumulative: 114 },
-  { date: "2024-09-14", registrations: 3, cumulative: 117 },
-  { date: "2024-09-15", registrations: 16, cumulative: 133 },
-  { date: "2024-09-16", registrations: 8, cumulative: 141 },
-  { date: "2024-09-17", registrations: 22, cumulative: 163 },
-  { date: "2024-09-18", registrations: 13, cumulative: 176 },
-  { date: "2024-09-19", registrations: 5, cumulative: 181 },
-  { date: "2024-09-20", registrations: 7, cumulative: 188 },
-  { date: "2024-09-21", registrations: 19, cumulative: 207 },
-  { date: "2024-09-22", registrations: 4, cumulative: 211 },
-  { date: "2024-09-23", registrations: 10, cumulative: 221 },
-  { date: "2024-09-24", registrations: 17, cumulative: 238 },
-  { date: "2024-09-25", registrations: 6, cumulative: 244 },
-  { date: "2024-09-26", registrations: 3, cumulative: 247 },
-  { date: "2024-09-27", registrations: 0, cumulative: 247 },
-  { date: "2024-09-28", registrations: 0, cumulative: 247 },
-  { date: "2024-09-29", registrations: 0, cumulative: 247 },
-  { date: "2024-09-30", registrations: 0, cumulative: 247 },
-  { date: "2024-10-01", registrations: 0, cumulative: 247 },
-  { date: "2024-10-15", registrations: 0, cumulative: 247 },
-  { date: "2024-11-01", registrations: 0, cumulative: 247 },
-  { date: "2024-11-15", registrations: 0, cumulative: 247 },
-  { date: "2024-11-27", registrations: 0, cumulative: 247 },
-];
+import { RegistrationService } from "@/services/registrationService";
+interface RegistrationTrendData {
+  date: string;
+  registrations: number;
+  cumulative: number;
+}
 
 const chartConfig = {
   registrations: {
@@ -89,44 +56,45 @@ export function AreaChartInteractive({
   icon = <TrendingUp className="h-5 w-5" />,
 }: AreaChartInteractiveProps) {
   const [timeRange, setTimeRange] = React.useState("90d");
+  const [registrationData, setRegistrationData] = React.useState<
+    RegistrationTrendData[]
+  >([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const filteredData = registrationData.filter((item) => {
-    const date = new Date(item.date);
-    const referenceDate = new Date("2024-11-27"); // Current date
-    let daysToSubtract = 90;
-    if (timeRange === "30d") {
-      daysToSubtract = 30;
-    } else if (timeRange === "7d") {
-      daysToSubtract = 7;
-    }
-    const startDate = new Date(referenceDate);
-    startDate.setDate(startDate.getDate() - daysToSubtract);
-    return date >= startDate;
-  });
+  // Fetch registration trends data
+  React.useEffect(() => {
+    const fetchTrends = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  // Calculate average registrations per day for the selected period
-  const averageStats = React.useMemo(() => {
-    const totalRegistrations = filteredData.reduce(
-      (sum, item) => sum + item.registrations,
-      0
-    );
-    const totalDays = filteredData.length;
-    const averagePerDay = totalDays > 0 ? totalRegistrations / totalDays : 0;
+        let days = 90;
+        if (timeRange === "30d") days = 30;
+        else if (timeRange === "7d") days = 7;
+        else if (timeRange === "180d") days = 180;
 
-    const periodName =
-      timeRange === "7d"
-        ? "7 days"
-        : timeRange === "30d"
-        ? "30 days"
-        : "3 months";
+        const result = await RegistrationService.getRegistrationTrends(days);
 
-    return {
-      average: averagePerDay,
-      total: totalRegistrations,
-      days: totalDays,
-      period: periodName,
+        if (result.error) {
+          console.error("Error fetching registration trends:", result.error);
+          setError("Failed to load registration trends");
+        } else {
+          setRegistrationData(result.data || []);
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        setError("Failed to load registration trends");
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [filteredData, timeRange]);
+
+    fetchTrends();
+  }, [timeRange]);
+
+  // Data is already filtered by timeRange in the API call
+  const filteredData = registrationData;
 
   return (
     <Card className="pt-0">
@@ -146,6 +114,9 @@ export function AreaChartInteractive({
             <SelectValue placeholder="Last 3 months" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
+            <SelectItem value="180d" className="rounded-lg">
+              Last 6 months
+            </SelectItem>
             <SelectItem value="90d" className="rounded-lg">
               Last 3 months
             </SelectItem>
@@ -159,111 +130,137 @@ export function AreaChartInteractive({
         </Select>
       </CardHeader>
       <CardContent className="px-2 pt-3 pb-4 sm:px-6 sm:pt-4">
-        <ChartContainer
-          config={chartConfig}
-          className="aspect-auto h-[295px] w-full"
-        >
-          <AreaChart data={filteredData}>
-            <defs>
-              <linearGradient
-                id="fillRegistrations"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.6} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05} />
-              </linearGradient>
-              <linearGradient id="fillCumulative" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.6} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                });
-              }}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={({ active, payload, label }) => {
-                if (active && payload && payload.length) {
-                  return (
-                    <div className="rounded-lg border bg-background p-3 shadow-md">
-                      <div className="font-medium mb-2">
-                        {new Date(label).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </div>
-                      <div className="space-y-1">
-                        {payload.map((entry, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-2 text-sm"
-                          >
+        {loading ? (
+          <div className="flex h-[295px] items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : error ? (
+          <div className="flex h-[295px] items-center justify-center">
+            <p className="text-muted-foreground">{error}</p>
+          </div>
+        ) : (
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-[295px] w-full"
+          >
+            <AreaChart data={filteredData}>
+              <defs>
+                <linearGradient
+                  id="fillRegistrations"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.6} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id="fillCumulative" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.6} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
+                tickFormatter={(value) => {
+                  const date = new Date(value);
+                  return date.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  });
+                }}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="rounded-lg border bg-background p-3 shadow-md">
+                        <div className="font-medium mb-2">
+                          {new Date(label).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </div>
+                        <div className="space-y-1">
+                          {payload.map((entry, index) => (
                             <div
-                              className="h-3 w-3 rounded-full"
-                              style={{
-                                backgroundColor: entry.stroke || entry.color,
-                              }}
-                            />
-                            <span className="text-muted-foreground">
-                              {entry.dataKey === "registrations"
-                                ? "Daily Registrations"
-                                : "Cumulative Total"}
-                            </span>
-                            <span className="font-medium ml-auto">
-                              {entry.value}
-                            </span>
-                          </div>
-                        ))}
+                              key={index}
+                              className="flex items-center gap-2 text-sm"
+                            >
+                              <div
+                                className="h-3 w-3 rounded-full"
+                                style={{
+                                  backgroundColor: entry.stroke || entry.color,
+                                }}
+                              />
+                              <span className="text-muted-foreground">
+                                {entry.dataKey === "registrations"
+                                  ? "Daily Registrations"
+                                  : "Cumulative Total"}
+                              </span>
+                              <span className="font-medium ml-auto">
+                                {entry.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Area
-              dataKey="registrations"
-              type="natural"
-              fill="url(#fillRegistrations)"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              stackId="a"
-            />
-            <Area
-              dataKey="cumulative"
-              type="natural"
-              fill="url(#fillCumulative)"
-              stroke="#10b981"
-              strokeWidth={2}
-              stackId="b"
-            />
-          </AreaChart>
-        </ChartContainer>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Area
+                dataKey="registrations"
+                type="natural"
+                fill="url(#fillRegistrations)"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                stackId="a"
+              />
+              <Area
+                dataKey="cumulative"
+                type="natural"
+                fill="url(#fillCumulative)"
+                stroke="#10b981"
+                strokeWidth={2}
+                stackId="b"
+              />
+            </AreaChart>
+          </ChartContainer>
+        )}
 
         {/* Simple Statistics Line */}
-        <div className="flex items-center gap-2 pt-2 mt-2 text-sm text-muted-foreground">
-          <TrendingUp className="h-4 w-4" />
-          <span>
-            Average: {averageStats.average.toFixed(1)} registrations/day over{" "}
-            {averageStats.period} ({averageStats.total} total)
-          </span>
-        </div>
+        {!loading && !error && filteredData.length > 0 && (
+          <div className="flex items-center gap-2 pt-2 mt-2 text-sm text-muted-foreground">
+            <TrendingUp className="h-4 w-4" />
+            <span>
+              Average:{" "}
+              {(
+                filteredData.reduce(
+                  (sum, item) => sum + item.registrations,
+                  0
+                ) / filteredData.length
+              ).toFixed(1)}{" "}
+              registrations/day over{" "}
+              {timeRange === "7d"
+                ? "7 days"
+                : timeRange === "30d"
+                ? "30 days"
+                : timeRange === "180d"
+                ? "6 months"
+                : "3 months"}{" "}
+              ({filteredData[filteredData.length - 1]?.cumulative || 0} total)
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

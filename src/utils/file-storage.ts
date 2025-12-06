@@ -10,13 +10,32 @@ type FileType =
 
 /**
  * Generates a unique filename for storage
- * Format: {timestamp}_{random}_{originalName}
+ * Format: {form_token}_{document_type}_{YYYYMMDD-HHMMSS}_{random}_{originalName}
  */
-export function generateUniqueFileName(originalName: string): string {
-  const timestamp = Date.now();
+export function generateUniqueFileName(
+  originalName: string,
+  formToken: string,
+  fileType: FileType
+): string {
+  const now = new Date();
+
+  // Create human-readable timestamp: YYYYMMDD-HHMMSS
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  const readableTimestamp = `${year}${month}${day}-${hours}${minutes}${seconds}`;
   const random = Math.random().toString(36).substring(2, 8);
   const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, "_");
-  return `${timestamp}_${random}_${sanitizedName}`;
+  const sanitizedToken = formToken.replace(/[^a-zA-Z0-9-]/g, "_");
+
+  // Convert file type to human-readable format
+  const documentType = fileType.replace(/_/g, "-");
+
+  return `${sanitizedToken}_${documentType}_${readableTimestamp}_${random}_${sanitizedName}`;
 }
 
 /**
@@ -41,11 +60,12 @@ export function getStoragePath(fileType: FileType): string {
  */
 export async function uploadFile(
   file: File,
-  fileType: FileType
+  fileType: FileType,
+  formToken: string
 ): Promise<{ url: string | null; error: string | null }> {
   try {
     // Generate unique filename and path
-    const fileName = generateUniqueFileName(file.name);
+    const fileName = generateUniqueFileName(file.name, formToken, fileType);
     const storagePath = getStoragePath(fileType);
     const fullPath = `${storagePath}${fileName}`;
 
@@ -85,7 +105,8 @@ export async function uploadFile(
  */
 export async function uploadMultipleFiles(
   files: File[],
-  fileType: FileType
+  fileType: FileType,
+  formToken: string
 ): Promise<{ urls: string[]; errors: string[] }> {
   console.log(`📁 Uploading ${files.length} files of type: ${fileType}`);
 
@@ -93,7 +114,9 @@ export async function uploadMultipleFiles(
   const errors: string[] = [];
 
   // Upload files in parallel for better performance
-  const uploadPromises = files.map((file) => uploadFile(file, fileType));
+  const uploadPromises = files.map((file) =>
+    uploadFile(file, fileType, formToken)
+  );
   const results = await Promise.all(uploadPromises);
 
   results.forEach((result, index) => {
@@ -161,6 +184,6 @@ if (typeof window === "undefined" && process.env.NODE_ENV !== "production") {
   console.log("- DOB proofs:", getStoragePath("player1_dob_proof"));
   console.log(
     "- Unique filename example:",
-    generateUniqueFileName("my-photo.jpg")
+    generateUniqueFileName("my-photo.jpg", "jet-2025-ABC123", "team_photo")
   );
 }
