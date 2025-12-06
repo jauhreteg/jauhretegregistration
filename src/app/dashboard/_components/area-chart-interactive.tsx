@@ -161,7 +161,7 @@ export function AreaChartInteractive({
       <CardContent className="px-2 pt-3 pb-4 sm:px-6 sm:pt-4">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
+          className="aspect-auto h-[295px] w-full"
         >
           <AreaChart data={filteredData}>
             <defs>

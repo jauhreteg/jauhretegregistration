@@ -136,7 +136,7 @@ export function BarChartHorizontal({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={dynamicChartConfig} className="h-[300px]">
+        <ChartContainer config={dynamicChartConfig} className="h-[295px]">
           <BarChart
             accessibilityLayer
             data={processedData}

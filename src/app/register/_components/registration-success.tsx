@@ -51,7 +51,7 @@ export function RegistrationSuccess({
 
         <p className="text-lg font-montserrat max-w-2xl mx-auto text-gray-600">
           Your registration has been successfully submitted and will be reviewed
-          by the Jauhr-E-Teg team and the Ustad whose name was provided in your
+          by the Jauhr E Teg team and the Ustad whose name was provided in your
           registration. We may contact you for additional information or
           corrections if needed, and will get back to you soon.
         </p>

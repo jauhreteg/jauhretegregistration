@@ -1,25 +1,9 @@
 "use client";
 
-import { AppSidebar } from "./_components/app-sidebar";
 import { BarChartHorizontal } from "./_components/barchart-horizontal";
 import { StatCard } from "./_components/stat-card";
 import { RecentRegistrations } from "./_components/recent-registrations";
 import { AreaChartInteractive } from "./_components/area-chart-interactive";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import ScrambledText from "@/components/ui/scrambled-text";
 
 import {
   Users,
@@ -114,84 +98,79 @@ const mockData = {
 
 export default function Page() {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <div className="flex flex-1 flex-col gap-6 p-6">
-          {/* TOP THIRD - Registration Stats */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-            <StatCard
-              title="Total Registrations"
-              value={mockData.totalRegistrations}
-              description="All registration statuses"
-              icon={FileText}
-            />
-            <StatCard
-              title="Pending Review"
-              value={mockData.pendingRegistrations}
-              description="Awaiting approval/denial"
-              icon={Clock}
-              iconColor="text-yellow-600"
-              valueColor="text-2xl font-bold text-yellow-600"
-            />
-            <StatCard
-              title="Approved"
-              value={mockData.approvedRegistrations}
-              description="Ready for tournament"
-              icon={CheckCircle}
-              iconColor="text-green-600"
-              valueColor="text-2xl font-bold text-green-600"
-            />
-            <StatCard
-              title="Denied"
-              value={mockData.deniedRegistrations}
-              description="Not eligible"
-              icon={XCircle}
-              iconColor="text-red-600"
-              valueColor="text-2xl font-bold text-red-600"
-            />
-            <StatCard
-              title="Total Players"
-              value={mockData.totalPlayers}
-              description="From approved teams only"
-              icon={Users}
-              iconColor="text-blue-600"
-              valueColor="text-2xl font-bold text-blue-600"
-            />
-          </div>
+    <div className="flex flex-1 flex-col gap-6 p-6">
+      {/* TOP THIRD - Registration Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <StatCard
+          title="Total Registrations"
+          value={mockData.totalRegistrations}
+          description="All registration statuses"
+          icon={FileText}
+        />
+        <StatCard
+          title="Pending Review"
+          value={mockData.pendingRegistrations}
+          description="Awaiting approval/denial"
+          icon={Clock}
+          iconColor="text-yellow-600"
+          valueColor="text-2xl font-bold text-yellow-600"
+        />
+        <StatCard
+          title="Approved"
+          value={mockData.approvedRegistrations}
+          description="Ready for tournament"
+          icon={CheckCircle}
+          iconColor="text-green-600"
+          valueColor="text-2xl font-bold text-green-600"
+        />
+        <StatCard
+          title="Denied"
+          value={mockData.deniedRegistrations}
+          description="Not eligible"
+          icon={XCircle}
+          iconColor="text-red-600"
+          valueColor="text-2xl font-bold text-red-600"
+        />
+        <StatCard
+          title="Total Players"
+          value={mockData.totalPlayers}
+          description="From approved teams only"
+          icon={Users}
+          iconColor="text-blue-600"
+          valueColor="text-2xl font-bold text-blue-600"
+        />
+      </div>
 
-          {/* CENTER THIRD - Charts */}
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Left Side - City Breakdown Chart */}
-            <BarChartHorizontal
-              data={mockData.cityBreakdown}
-              barColor="url(#barGradient)"
-              labelColor="#ffffff"
-              title="Registrations by City"
-              description="Geographic distribution of team registrations (top 10)"
-              icon={<MapPin className="h-5 w-5" />}
-              maxCities={5}
-              barSize={45}
-            />
+      {/* CENTER THIRD - Charts */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Left Side - City Breakdown Chart */}
+        <BarChartHorizontal
+          data={mockData.cityBreakdown}
+          barColor="url(#barGradient)"
+          labelColor="#ffffff"
+          title="Registrations by City"
+          description="Geographic distribution of team registrations (top 10)"
+          icon={<MapPin className="h-5 w-5" />}
+          maxCities={5}
+          barSize={45}
+        />
 
-            {/* Right Side - Registration Trends Area Chart */}
-            <AreaChartInteractive
-              title="Registration Trends"
-              description="Daily registration activity over time"
-              icon={<Users className="h-5 w-5" />}
-            />
-          </div>
+        {/* Right Side - Registration Trends Area Chart */}
+        <AreaChartInteractive
+          title="Registration Trends"
+          description="Daily registration activity over time"
+          icon={<Users className="h-5 w-5" />}
+        />
+      </div>
 
-          {/* BOTTOM THIRD - Recent Registrations Table */}
-          <RecentRegistrations
-            data={mockData.recentRegistrations}
-            title="Recent Registrations"
-            description="Latest team registrations from the past 7 days"
-            maxItems={5}
-            icon={<FileText className="h-5 w-5" />}
-          />
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+      {/* BOTTOM THIRD - Recent Registrations Table */}
+      <RecentRegistrations
+        data={mockData.recentRegistrations}
+        title="Recent Registrations"
+        description="Latest team registrations from the past 7 days"
+        maxItems={5}
+        icon={<FileText className="h-5 w-5" />}
+      />
+    </div>
   );
 }

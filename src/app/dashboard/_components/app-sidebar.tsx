@@ -26,8 +26,6 @@ import {
 import Image from "next/image";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
-import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
 import ScrambledText from "@/components/ui/scrambled-text";
 import {
   Sidebar,
@@ -54,34 +52,11 @@ const navMain = [
   },
 ];
 
+// Import useUser hook
+import { useUser } from "../layout";
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [user, setUser] = React.useState<User | null>(null);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const supabase = createClient();
-
-    // Get initial user
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-    };
-
-    getUser();
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { user, loading } = useUser();
 
   // Format user data for NavUser component
   const userData = React.useMemo(() => {
