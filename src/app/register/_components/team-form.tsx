@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,6 +47,36 @@ export default function TeamForm({
   isRequired = () => false,
   playerNames,
 }: TeamFormProps) {
+  // Auto-update player order with actual names when available
+  React.useEffect(() => {
+    // Check if current values are still the generic defaults and update them
+    if (
+      teamData.playerOrder1 === "Player 1" &&
+      playerNames.player1 !== "Player 1"
+    ) {
+      handleFieldChange("playerOrder1", playerNames.player1);
+    }
+    if (
+      teamData.playerOrder2 === "Player 2" &&
+      playerNames.player2 !== "Player 2"
+    ) {
+      handleFieldChange("playerOrder2", playerNames.player2);
+    }
+    if (
+      teamData.playerOrder3 === "Player 3" &&
+      playerNames.player3 !== "Player 3"
+    ) {
+      handleFieldChange("playerOrder3", playerNames.player3);
+    }
+  }, [
+    playerNames.player1,
+    playerNames.player2,
+    playerNames.player3,
+    teamData.playerOrder1,
+    teamData.playerOrder2,
+    teamData.playerOrder3,
+  ]);
+
   // Enhanced field change handler
   const handleFieldChange = (
     field: keyof TeamData,
@@ -275,9 +306,15 @@ export default function TeamForm({
                     : "bg-white border-gray-300 text-gray-900"
                 }`}
               >
-                <SelectItem value="Player 1">{playerNames.player1}</SelectItem>
-                <SelectItem value="Player 2">{playerNames.player2}</SelectItem>
-                <SelectItem value="Player 3">{playerNames.player3}</SelectItem>
+                <SelectItem value={playerNames.player1}>
+                  {playerNames.player1}
+                </SelectItem>
+                <SelectItem value={playerNames.player2}>
+                  {playerNames.player2}
+                </SelectItem>
+                <SelectItem value={playerNames.player3}>
+                  {playerNames.player3}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -312,9 +349,15 @@ export default function TeamForm({
                     : "bg-white border-gray-300 text-gray-900"
                 }`}
               >
-                <SelectItem value="Player 1">{playerNames.player1}</SelectItem>
-                <SelectItem value="Player 2">{playerNames.player2}</SelectItem>
-                <SelectItem value="Player 3">{playerNames.player3}</SelectItem>
+                <SelectItem value={playerNames.player1}>
+                  {playerNames.player1}
+                </SelectItem>
+                <SelectItem value={playerNames.player2}>
+                  {playerNames.player2}
+                </SelectItem>
+                <SelectItem value={playerNames.player3}>
+                  {playerNames.player3}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -349,9 +392,15 @@ export default function TeamForm({
                     : "bg-white border-gray-300 text-gray-900"
                 }`}
               >
-                <SelectItem value="Player 1">{playerNames.player1}</SelectItem>
-                <SelectItem value="Player 2">{playerNames.player2}</SelectItem>
-                <SelectItem value="Player 3">{playerNames.player3}</SelectItem>
+                <SelectItem value={playerNames.player1}>
+                  {playerNames.player1}
+                </SelectItem>
+                <SelectItem value={playerNames.player2}>
+                  {playerNames.player2}
+                </SelectItem>
+                <SelectItem value={playerNames.player3}>
+                  {playerNames.player3}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

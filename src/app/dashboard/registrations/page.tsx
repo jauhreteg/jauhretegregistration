@@ -669,6 +669,11 @@ export default function RegistrationsPage() {
           <div class="field"><span class="label">Senior Coach Email:</span> ${
             registration.coach_email || "N/A"
           }</div>
+          
+          <h4 style="margin-top: 20px;">Player Order</h4>
+          <div class="field"><span class="label">Default Player Order:</span> ${
+            registration.player_order || "N/A"
+          }</div>
         </div>
 
         <!-- Player Information Section -->
