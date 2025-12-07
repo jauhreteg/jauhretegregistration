@@ -15,6 +15,7 @@ import {
   useRealtimeNotifications,
   type NotificationData,
 } from "@/hooks/useRealtimeNotifications";
+import { useUser } from "@/app/dashboard/layout";
 
 interface NotificationItemProps {
   notification: NotificationData;
@@ -37,19 +38,25 @@ function NotificationItem({
     return date.toLocaleDateString();
   };
 
-  const getTypeColor = (type: "new" | "updated") => {
-    return type === "new"
-      ? "bg-green-100 text-green-800 border-green-200"
-      : "bg-blue-100 text-blue-800 border-blue-200";
+  const getTypeColor = (type: "new" | "updated" | "admin_updated") => {
+    switch (type) {
+      case "new":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "admin_updated":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "updated":
+      default:
+        return "bg-blue-100 text-blue-800 border-blue-200";
+    }
   };
 
-  const getTypeIcon = (type: "new" | "updated") => {
+  const getTypeIcon = (type: "new" | "updated" | "admin_updated") => {
     return ""; // No emoji
   };
 
   return (
     <div
-      className={`p-3 border-b last:border-b-0 hover:bg-gray-50 transition-colors ${
+      className={`p-3 hover:bg-gray-50 transition-colors ${
         !notification.read ? "bg-blue-50/30" : ""
       }`}
     >
@@ -60,7 +67,15 @@ function NotificationItem({
               variant="outline"
               className={`text-xs ${getTypeColor(notification.type)}`}
             >
-              {notification.type === "new" ? "New Registration" : "Updated"}
+              {notification.type === "new"
+                ? "New Registration"
+                : notification.type === "admin_updated"
+                ? `Admin Updated${
+                    notification.adminUser
+                      ? ` by ${notification.adminUser}`
+                      : ""
+                  }`
+                : "Updated"}
             </Badge>
           </div>
           <div className="font-medium text-sm truncate">
@@ -95,13 +110,14 @@ function NotificationItem({
 }
 
 export function NotificationDropdown() {
+  const { user } = useUser();
   const {
     notifications,
     unreadCount,
     markAsRead,
     markAllAsRead,
     clearNotifications,
-  } = useRealtimeNotifications();
+  } = useRealtimeNotifications(user);
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -161,25 +177,34 @@ export function NotificationDropdown() {
         </div>
 
         {/* Notifications List */}
-        <ScrollArea className="max-h-96">
-          {notifications.length === 0 ? (
-            <div className="p-6 text-center text-muted-foreground">
-              <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <div className="text-sm">No notifications yet</div>
-              <div className="text-xs">New registrations will appear here</div>
-            </div>
-          ) : (
-            <div>
-              {notifications.map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onMarkAsRead={markAsRead}
-                />
-              ))}
-            </div>
+        <div className="relative">
+          <div className="max-h-[240px] overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground">
+                <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <div className="text-sm">No notifications yet</div>
+                <div className="text-xs">
+                  New registrations will appear here
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
+                    onMarkAsRead={markAsRead}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Scroll indicator */}
+          {notifications.length >= 2 && (
+            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white to-transparent pointer-events-none" />
           )}
-        </ScrollArea>
+        </div>
 
         {/* Footer Actions */}
         {notifications.length > 0 && (

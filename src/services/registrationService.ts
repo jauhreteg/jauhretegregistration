@@ -289,7 +289,9 @@ export class RegistrationService {
     updates: {
       status?: StatusType;
       admin_notes?: string;
-    }
+      [key: string]: any; // Allow any field to be updated
+    },
+    isAdminUpdate: boolean = false
   ): Promise<{ data: Registration | null; error: any }> {
     try {
       const { data, error } = await supabase
@@ -309,6 +311,109 @@ export class RegistrationService {
       console.error("Unexpected error updating registration:", error);
       return { data: null, error };
     }
+  }
+
+  /**
+   * Update entire registration with all fields
+   */
+  static async updateFullRegistration(
+    id: string,
+    registration: Omit<Registration, "id" | "created_at" | "updated_at">,
+    isAdminUpdate: boolean = false
+  ): Promise<{ data: Registration | null; error: any }> {
+    try {
+      const updateData = {
+        ...registration,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from("registrations")
+        .update(updateData)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating full registration:", error);
+        return { data: null, error };
+      }
+
+      return { data: data as Registration, error: null };
+    } catch (error) {
+      console.error("Unexpected error updating full registration:", error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Admin-specific update registration (will be marked as admin update)
+   */
+  static async updateRegistrationByAdmin(
+    id: string,
+    updates: {
+      status?: StatusType;
+      admin_notes?: string;
+      [key: string]: any;
+    },
+    adminUser: string = "Admin"
+  ): Promise<{ data: Registration | null; error: any }> {
+    // Mark this session as making an admin update with admin identity
+    if (typeof window !== "undefined") {
+      const adminUpdateInfo = {
+        timestamp: Date.now(),
+        adminUser: adminUser,
+        registrationId: id,
+      };
+      localStorage.setItem(
+        "admin_update_info",
+        JSON.stringify(adminUpdateInfo)
+      );
+      localStorage.setItem(
+        "admin_update_session",
+        adminUpdateInfo.timestamp.toString()
+      );
+      // Clear it after a short delay to prevent false positives
+      setTimeout(() => {
+        localStorage.removeItem("admin_update_info");
+        localStorage.removeItem("admin_update_session");
+      }, 3000);
+    }
+
+    return this.updateRegistration(id, updates, true);
+  }
+
+  /**
+   * Admin-specific full registration update (will be marked as admin update)
+   */
+  static async updateFullRegistrationByAdmin(
+    id: string,
+    registration: Omit<Registration, "id" | "created_at" | "updated_at">,
+    adminUser: string = "Admin"
+  ): Promise<{ data: Registration | null; error: any }> {
+    // Mark this session as making an admin update with admin identity
+    if (typeof window !== "undefined") {
+      const adminUpdateInfo = {
+        timestamp: Date.now(),
+        adminUser: adminUser,
+        registrationId: id,
+      };
+      localStorage.setItem(
+        "admin_update_info",
+        JSON.stringify(adminUpdateInfo)
+      );
+      localStorage.setItem(
+        "admin_update_session",
+        adminUpdateInfo.timestamp.toString()
+      );
+      // Clear it after a short delay to prevent false positives
+      setTimeout(() => {
+        localStorage.removeItem("admin_update_info");
+        localStorage.removeItem("admin_update_session");
+      }, 3000);
+    }
+
+    return this.updateFullRegistration(id, registration, true);
   }
 
   /**

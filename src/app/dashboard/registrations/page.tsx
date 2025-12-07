@@ -47,6 +47,7 @@ import {
   Download,
   Eye,
   Edit,
+  Copy,
   MoreHorizontal,
   Calendar,
   Users,
@@ -64,6 +65,8 @@ import { StatCard } from "../_components/stat-card";
 import { RegistrationService } from "@/services/registrationService";
 import { PageHeader } from "@/components/PageHeader";
 import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
+import { useToast } from "@/components/ui/toast-provider";
+import RegistrationDetailModal from "@/components/RegistrationDetailModal";
 
 // Using Registration interface from database types
 
@@ -166,6 +169,7 @@ const StatusBadge = ({ status }: { status: StatusType }) => {
 };
 
 export default function RegistrationsPage() {
+  const { addToast } = useToast();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -175,8 +179,130 @@ export default function RegistrationsPage() {
   const [divisionFilter, setDivisionFilter] = useState<string>("all");
   const [groupBy, setGroupBy] = useState<string>("none");
 
+  // Modal state
+  const [selectedRegistration, setSelectedRegistration] =
+    useState<Registration | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Export modal state
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportColumns, setExportColumns] = useState<string[]>([]);
+  const [exportFilters, setExportFilters] = useState({
+    status: "all",
+    division: "all",
+    dateFrom: "",
+    dateTo: "",
+  });
+
+  // Available columns for export
+  const availableColumns = [
+    { key: "form_token", label: "Form Token" },
+    { key: "team_name", label: "Team Name" },
+    { key: "status", label: "Status" },
+    { key: "division", label: "Division" },
+    { key: "team_location", label: "Team Location" },
+    { key: "submission_date_time", label: "Submission Date" },
+    { key: "ustad_name", label: "Ustad Name" },
+    { key: "ustad_email", label: "Ustad Email" },
+    { key: "coach_name", label: "Coach Name" },
+    { key: "coach_email", label: "Coach Email" },
+    { key: "player1_name", label: "Player 1 Name" },
+    { key: "player1_singh_kaur", label: "Player 1 Singh/Kaur" },
+    { key: "player1_dob", label: "Player 1 DOB" },
+    { key: "player1_phone_number", label: "Player 1 Phone" },
+    { key: "player1_email", label: "Player 1 Email" },
+    { key: "player1_city", label: "Player 1 City" },
+    { key: "player1_father_name", label: "Player 1 Father Name" },
+    { key: "player1_mother_name", label: "Player 1 Mother Name" },
+    {
+      key: "player1_emergency_contact_name",
+      label: "Player 1 Emergency Contact",
+    },
+    {
+      key: "player1_emergency_contact_phone",
+      label: "Player 1 Emergency Phone",
+    },
+    { key: "player1_gatka_experience", label: "Player 1 Gatka Experience" },
+    { key: "player2_name", label: "Player 2 Name" },
+    { key: "player2_singh_kaur", label: "Player 2 Singh/Kaur" },
+    { key: "player2_dob", label: "Player 2 DOB" },
+    { key: "player2_phone_number", label: "Player 2 Phone" },
+    { key: "player2_email", label: "Player 2 Email" },
+    { key: "player2_city", label: "Player 2 City" },
+    { key: "player2_father_name", label: "Player 2 Father Name" },
+    { key: "player2_mother_name", label: "Player 2 Mother Name" },
+    {
+      key: "player2_emergency_contact_name",
+      label: "Player 2 Emergency Contact",
+    },
+    {
+      key: "player2_emergency_contact_phone",
+      label: "Player 2 Emergency Phone",
+    },
+    { key: "player2_gatka_experience", label: "Player 2 Gatka Experience" },
+    { key: "player3_name", label: "Player 3 Name" },
+    { key: "player3_singh_kaur", label: "Player 3 Singh/Kaur" },
+    { key: "player3_dob", label: "Player 3 DOB" },
+    { key: "player3_phone_number", label: "Player 3 Phone" },
+    { key: "player3_email", label: "Player 3 Email" },
+    { key: "player3_city", label: "Player 3 City" },
+    { key: "player3_father_name", label: "Player 3 Father Name" },
+    { key: "player3_mother_name", label: "Player 3 Mother Name" },
+    {
+      key: "player3_emergency_contact_name",
+      label: "Player 3 Emergency Contact",
+    },
+    {
+      key: "player3_emergency_contact_phone",
+      label: "Player 3 Emergency Phone",
+    },
+    { key: "player3_gatka_experience", label: "Player 3 Gatka Experience" },
+    { key: "backup_name", label: "Backup Player Name" },
+    { key: "backup_singh_kaur", label: "Backup Player Singh/Kaur" },
+    { key: "backup_dob", label: "Backup Player DOB" },
+    { key: "backup_phone_number", label: "Backup Player Phone" },
+    { key: "backup_email", label: "Backup Player Email" },
+    { key: "backup_city", label: "Backup Player City" },
+    { key: "backup_father_name", label: "Backup Player Father Name" },
+    { key: "backup_mother_name", label: "Backup Player Mother Name" },
+    {
+      key: "backup_emergency_contact_name",
+      label: "Backup Player Emergency Contact",
+    },
+    {
+      key: "backup_emergency_contact_phone",
+      label: "Backup Player Emergency Phone",
+    },
+    { key: "backup_gatka_experience", label: "Backup Player Gatka Experience" },
+    { key: "admin_notes", label: "Admin Notes" },
+    { key: "created_at", label: "Created At" },
+    { key: "updated_at", label: "Updated At" },
+  ];
+
   // Use real-time notifications hook
   const { clearRegistrationNotifications } = useRealtimeNotifications();
+
+  // Fetch registrations function that can be reused
+  const fetchRegistrations = async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      setError(null);
+
+      const result = await RegistrationService.getAllRegistrations();
+
+      if (result.error) {
+        console.error("Error fetching registrations:", result.error);
+        setError("Failed to load registrations. Please try again.");
+      } else {
+        setRegistrations(result.data || []);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching registrations:", err);
+      setError("Failed to load registrations. Please try again.");
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
 
   React.useEffect(() => {
     setMounted(true);
@@ -185,29 +311,645 @@ export default function RegistrationsPage() {
     // This indicates they've "seen" the new registrations
     clearRegistrationNotifications();
 
-    const fetchRegistrations = async () => {
+    fetchRegistrations();
+  }, []);
+
+  // Modal handlers
+  const handleViewDetails = (registration: Registration) => {
+    setSelectedRegistration(registration);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = async () => {
+    setIsModalOpen(false);
+    setSelectedRegistration(null);
+
+    // Refresh the registrations data after closing modal
+    await fetchRegistrations(false); // Don't show loading spinner for refresh
+  };
+
+  // Copy token handler
+  const handleCopyToken = async (formToken: string) => {
+    try {
+      await navigator.clipboard.writeText(formToken);
+      addToast({
+        variant: "success",
+        title: "Token Copied",
+        description: `Form token ${formToken} copied to clipboard`,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error("Failed to copy token:", error);
+      // Fallback for older browsers
       try {
-        setLoading(true);
-        setError(null);
+        const textArea = document.createElement("textarea");
+        textArea.value = formToken;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        addToast({
+          variant: "success",
+          title: "Token Copied",
+          description: `Form token ${formToken} copied to clipboard`,
+          duration: 2000,
+        });
+      } catch (fallbackError) {
+        addToast({
+          variant: "error",
+          title: "Copy Failed",
+          description: "Failed to copy token to clipboard",
+          duration: 3000,
+        });
+      }
+    }
+  };
 
-        const result = await RegistrationService.getAllRegistrations();
+  // Download PDF handler
+  const handleDownloadPDF = async (registration: Registration) => {
+    try {
+      // For now, we'll implement a basic approach
+      // You could enhance this with a proper PDF generation library like jsPDF or Puppeteer
+      const content = generatePDFContent(registration);
 
-        if (result.error) {
-          console.error("Error fetching registrations:", result.error);
-          setError("Failed to load registrations. Please try again.");
-        } else {
-          setRegistrations(result.data || []);
+      // Create a simple HTML page that can be printed as PDF
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(content);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    } catch (error) {
+      console.error("Failed to download PDF:", error);
+    }
+  };
+
+  // Export handlers
+  const handleExportClick = () => {
+    // Set default columns to the most commonly used ones
+    const defaultColumns = [
+      "form_token",
+      "team_name",
+      "status",
+      "division",
+      "team_location",
+      "submission_date_time",
+      "ustad_name",
+      "coach_name",
+      "player1_name",
+      "player1_singh_kaur",
+      "player1_dob",
+      "player1_phone_number",
+      "player2_name",
+      "player2_singh_kaur",
+      "player2_dob",
+      "player2_phone_number",
+      "player3_name",
+      "player3_singh_kaur",
+      "player3_dob",
+      "player3_phone_number",
+    ];
+    setExportColumns(defaultColumns);
+    setIsExportModalOpen(true);
+  };
+
+  const handleColumnToggle = (columnKey: string) => {
+    setExportColumns((prev) =>
+      prev.includes(columnKey)
+        ? prev.filter((col) => col !== columnKey)
+        : [...prev, columnKey]
+    );
+  };
+
+  const selectAllColumns = () => {
+    setExportColumns(availableColumns.map((col) => col.key));
+  };
+
+  const deselectAllColumns = () => {
+    setExportColumns([]);
+  };
+
+  const convertToCSV = (data: Registration[], columns: string[]) => {
+    if (data.length === 0) return "";
+
+    const headers = columns.map((col) => {
+      const columnDef = availableColumns.find((c) => c.key === col);
+      return columnDef ? columnDef.label : col;
+    });
+
+    const csvContent = [headers];
+
+    data.forEach((row) => {
+      const csvRow = columns.map((col) => {
+        let value = row[col as keyof Registration];
+
+        // Handle dates
+        if (col.includes("date") || col.includes("_at")) {
+          value = value ? new Date(value as string).toLocaleString() : "";
         }
-      } catch (err) {
-        console.error("Unexpected error fetching registrations:", err);
-        setError("Failed to load registrations. Please try again.");
-      } finally {
-        setLoading(false);
+
+        // Handle null/undefined values
+        if (value == null) {
+          value = "";
+        }
+
+        // Escape quotes and wrap in quotes if contains comma, quote, or newline
+        const stringValue = String(value);
+        if (
+          stringValue.includes(",") ||
+          stringValue.includes('"') ||
+          stringValue.includes("\n")
+        ) {
+          return '"' + stringValue.replace(/"/g, '""') + '"';
+        }
+
+        return stringValue;
+      });
+      csvContent.push(csvRow);
+    });
+
+    return csvContent.map((row) => row.join(",")).join("\n");
+  };
+
+  const downloadCSV = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleExport = () => {
+    if (exportColumns.length === 0) {
+      addToast({
+        variant: "error",
+        title: "No Columns Selected",
+        description: "Please select at least one column to export.",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Apply filters to registrations
+    let dataToExport = registrations.filter((registration) => {
+      const matchesStatus =
+        exportFilters.status === "all" ||
+        registration.status === exportFilters.status;
+      const matchesDivision =
+        exportFilters.division === "all" ||
+        registration.division === exportFilters.division;
+
+      let matchesDateRange = true;
+      if (exportFilters.dateFrom || exportFilters.dateTo) {
+        const submissionDate = new Date(registration.submission_date_time);
+        if (exportFilters.dateFrom) {
+          matchesDateRange =
+            matchesDateRange &&
+            submissionDate >= new Date(exportFilters.dateFrom);
+        }
+        if (exportFilters.dateTo) {
+          const endDate = new Date(exportFilters.dateTo);
+          endDate.setHours(23, 59, 59, 999); // Include the entire end date
+          matchesDateRange = matchesDateRange && submissionDate <= endDate;
+        }
+      }
+
+      return matchesStatus && matchesDivision && matchesDateRange;
+    });
+
+    const csvContent = convertToCSV(dataToExport, exportColumns);
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+    const filename = `registrations-export-${timestamp}.csv`;
+
+    downloadCSV(csvContent, filename);
+
+    addToast({
+      variant: "success",
+      title: "Export Successful",
+      description: `Exported ${dataToExport.length} registrations to ${filename}`,
+      duration: 3000,
+    });
+
+    setIsExportModalOpen(false);
+  };
+
+  // Generate status badge HTML for PDF
+  const getStatusBadgeHTML = (status: StatusType) => {
+    const getStatusConfig = (status: StatusType) => {
+      switch (status) {
+        case "new submission":
+          return {
+            className: "status-new-submission",
+            label: "New Submission",
+          };
+        case "in review":
+          return {
+            className: "status-in-review",
+            label: "In Review",
+          };
+        case "information requested":
+          return {
+            className: "status-information-requested",
+            label: "Info Requested",
+          };
+        case "approved":
+          return {
+            className: "status-approved",
+            label: "Approved",
+          };
+        case "denied":
+          return {
+            className: "status-denied",
+            label: "Denied",
+          };
+        case "dropped":
+          return {
+            className: "status-dropped",
+            label: "Dropped",
+          };
+        default:
+          return {
+            className: "status-new-submission",
+            label:
+              String(status).charAt(0).toUpperCase() + String(status).slice(1),
+          };
       }
     };
 
-    fetchRegistrations();
-  }, []);
+    const config = getStatusConfig(status);
+    return `<span class="status-badge ${config.className}">${config.label}</span>`;
+  };
+
+  // Generate PDF content
+  const generatePDFContent = (registration: Registration) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Registration - ${registration.form_token}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .section { margin-bottom: 25px; page-break-inside: avoid; }
+          .field { margin: 8px 0; }
+          .label { font-weight: bold; display: inline-block; min-width: 120px; }
+          table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+          th, td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }
+          th { background-color: #f5f5f5; font-weight: bold; }
+          .player-section { margin-bottom: 20px; }
+          .player-header { background-color: #f8f9fa; padding: 8px; margin: 10px 0; font-weight: bold; border-left: 4px solid #007bff; }
+          .status-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid; }
+          .status-new-submission { background-color: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+          .status-in-review { background-color: #fef3c7; color: #a16207; border-color: #fde68a; }
+          .status-information-requested { background-color: #fed7aa; color: #c2410c; border-color: #fdba74; }
+          .status-approved { background-color: #dcfce7; color: #15803d; border-color: #bbf7d0; }
+          .status-denied { background-color: #fee2e2; color: #dc2626; border-color: #fecaca; }
+          .status-dropped { background-color: #f3f4f6; color: #374151; border-color: #d1d5db; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Registration Details</h1>
+          <h2>${registration.team_name}</h2>
+          <p><strong>Form Token:</strong> ${registration.form_token}</p>
+        </div>
+
+        <!-- Form Metadata Section -->
+        <div class="section">
+          <h3>Form Metadata</h3>
+          <div class="field"><span class="label">Form Token:</span> ${
+            registration.form_token
+          }</div>
+          <div class="field"><span class="label">Status:</span> ${getStatusBadgeHTML(
+            registration.status
+          )}</div>
+          <div class="field"><span class="label">Division:</span> ${
+            registration.division
+          }</div>
+          <div class="field"><span class="label">Submitted:</span> ${new Date(
+            registration.submission_date_time
+          ).toLocaleString()}</div>
+          <div class="field"><span class="label">Created:</span> ${new Date(
+            registration.created_at
+          ).toLocaleString()}</div>
+          <div class="field"><span class="label">Last Updated:</span> ${new Date(
+            registration.updated_at
+          ).toLocaleString()}</div>
+        </div>
+
+        <!-- Team Information Section -->
+        <div class="section">
+          <h3>Team Information</h3>
+          <div class="field"><span class="label">Team Name:</span> ${
+            registration.team_name
+          }</div>
+          <div class="field"><span class="label">Location:</span> ${
+            registration.team_location || "N/A"
+          }</div>
+          
+          <h4 style="margin-top: 20px;">Ustad Information</h4>
+          <div class="field"><span class="label">Ustad Name:</span> ${
+            registration.ustad_name || "N/A"
+          }</div>
+          <div class="field"><span class="label">Ustad Email:</span> ${
+            registration.ustad_email || "N/A"
+          }</div>
+          
+          <h4 style="margin-top: 20px;">Senior Coach Information</h4>
+          <div class="field"><span class="label">Senior Coach Name:</span> ${
+            registration.coach_name || "N/A"
+          }</div>
+          <div class="field"><span class="label">Senior Coach Email:</span> ${
+            registration.coach_email || "N/A"
+          }</div>
+        </div>
+
+        <!-- Player Information Section -->
+        <div class="section">
+          <h3>Player Information</h3>
+          
+          <div class="player-section">
+            <div class="player-header">Player 1</div>
+            <table>
+              <tr><th>Field</th><th>Value</th></tr>
+              <tr><td><strong>Name</strong></td><td>${
+                registration.player1_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Date of Birth</strong></td><td>${
+                registration.player1_dob || "N/A"
+              }</td></tr>
+              <tr><td><strong>Singh/Kaur</strong></td><td>${
+                registration.player1_singh_kaur || "N/A"
+              }</td></tr>
+              <tr><td><strong>Phone</strong></td><td>${
+                registration.player1_phone_number || "N/A"
+              }</td></tr>
+              <tr><td><strong>Email</strong></td><td>${
+                registration.player1_email || "N/A"
+              }</td></tr>
+              <tr><td><strong>City</strong></td><td>${
+                registration.player1_city || "N/A"
+              }</td></tr>
+              <tr><td><strong>Father's Name</strong></td><td>${
+                registration.player1_father_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Mother's Name</strong></td><td>${
+                registration.player1_mother_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Emergency Contact</strong></td><td>${
+                registration.player1_emergency_contact_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Emergency Phone</strong></td><td>${
+                registration.player1_emergency_contact_phone || "N/A"
+              }</td></tr>
+              <tr><td><strong>Gatka Experience</strong></td><td>${
+                registration.player1_gatka_experience || "N/A"
+              }</td></tr>
+            </table>
+          </div>
+
+          <div class="player-section">
+            <div class="player-header">Player 2</div>
+            <table>
+              <tr><th>Field</th><th>Value</th></tr>
+              <tr><td><strong>Name</strong></td><td>${
+                registration.player2_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Date of Birth</strong></td><td>${
+                registration.player2_dob || "N/A"
+              }</td></tr>
+              <tr><td><strong>Singh/Kaur</strong></td><td>${
+                registration.player2_singh_kaur || "N/A"
+              }</td></tr>
+              <tr><td><strong>Phone</strong></td><td>${
+                registration.player2_phone_number || "N/A"
+              }</td></tr>
+              <tr><td><strong>Email</strong></td><td>${
+                registration.player2_email || "N/A"
+              }</td></tr>
+              <tr><td><strong>City</strong></td><td>${
+                registration.player2_city || "N/A"
+              }</td></tr>
+              <tr><td><strong>Father's Name</strong></td><td>${
+                registration.player2_father_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Mother's Name</strong></td><td>${
+                registration.player2_mother_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Emergency Contact</strong></td><td>${
+                registration.player2_emergency_contact_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Emergency Phone</strong></td><td>${
+                registration.player2_emergency_contact_phone || "N/A"
+              }</td></tr>
+              <tr><td><strong>Gatka Experience</strong></td><td>${
+                registration.player2_gatka_experience || "N/A"
+              }</td></tr>
+            </table>
+          </div>
+
+          <div class="player-section">
+            <div class="player-header">Player 3</div>
+            <table>
+              <tr><th>Field</th><th>Value</th></tr>
+              <tr><td><strong>Name</strong></td><td>${
+                registration.player3_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Date of Birth</strong></td><td>${
+                registration.player3_dob || "N/A"
+              }</td></tr>
+              <tr><td><strong>Singh/Kaur</strong></td><td>${
+                registration.player3_singh_kaur || "N/A"
+              }</td></tr>
+              <tr><td><strong>Phone</strong></td><td>${
+                registration.player3_phone_number || "N/A"
+              }</td></tr>
+              <tr><td><strong>Email</strong></td><td>${
+                registration.player3_email || "N/A"
+              }</td></tr>
+              <tr><td><strong>City</strong></td><td>${
+                registration.player3_city || "N/A"
+              }</td></tr>
+              <tr><td><strong>Father's Name</strong></td><td>${
+                registration.player3_father_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Mother's Name</strong></td><td>${
+                registration.player3_mother_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Emergency Contact</strong></td><td>${
+                registration.player3_emergency_contact_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Emergency Phone</strong></td><td>${
+                registration.player3_emergency_contact_phone || "N/A"
+              }</td></tr>
+              <tr><td><strong>Gatka Experience</strong></td><td>${
+                registration.player3_gatka_experience || "N/A"
+              }</td></tr>
+            </table>
+          </div>
+
+          <div class="player-section">
+            <div class="player-header">Backup Player</div>
+            <table>
+              <tr><th>Field</th><th>Value</th></tr>
+              <tr><td><strong>Name</strong></td><td>${
+                registration.backup_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Date of Birth</strong></td><td>${
+                registration.backup_dob || "N/A"
+              }</td></tr>
+              <tr><td><strong>Singh/Kaur</strong></td><td>${
+                registration.backup_singh_kaur || "N/A"
+              }</td></tr>
+              <tr><td><strong>Phone</strong></td><td>${
+                registration.backup_phone_number || "N/A"
+              }</td></tr>
+              <tr><td><strong>Email</strong></td><td>${
+                registration.backup_email || "N/A"
+              }</td></tr>
+              <tr><td><strong>City</strong></td><td>${
+                registration.backup_city || "N/A"
+              }</td></tr>
+              <tr><td><strong>Father's Name</strong></td><td>${
+                registration.backup_father_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Mother's Name</strong></td><td>${
+                registration.backup_mother_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Emergency Contact</strong></td><td>${
+                registration.backup_emergency_contact_name || "N/A"
+              }</td></tr>
+              <tr><td><strong>Emergency Phone</strong></td><td>${
+                registration.backup_emergency_contact_phone || "N/A"
+              }</td></tr>
+              <tr><td><strong>Gatka Experience</strong></td><td>${
+                registration.backup_gatka_experience || "N/A"
+              }</td></tr>
+            </table>
+          </div>
+        </div>
+
+        ${
+          registration.admin_notes
+            ? `
+        <div class="section">
+          <h3>Admin Notes</h3>
+          <div class="field" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #17a2b8;">${registration.admin_notes}</div>
+        </div>
+        `
+            : ""
+        }
+      </body>
+      </html>
+    `;
+  };
+
+  const handleSaveRegistration = async (updatedRegistration: Registration) => {
+    try {
+      const result = await RegistrationService.updateFullRegistration(
+        updatedRegistration.id,
+        {
+          status: updatedRegistration.status,
+          submission_date_time: updatedRegistration.submission_date_time,
+          form_token: updatedRegistration.form_token,
+          division: updatedRegistration.division,
+          team_name: updatedRegistration.team_name,
+          ustad_name: updatedRegistration.ustad_name,
+          ustad_email: updatedRegistration.ustad_email,
+          coach_name: updatedRegistration.coach_name,
+          coach_email: updatedRegistration.coach_email,
+          team_location: updatedRegistration.team_location,
+          player_order: updatedRegistration.player_order,
+          team_photo: updatedRegistration.team_photo,
+          player1_name: updatedRegistration.player1_name,
+          player1_singh_kaur: updatedRegistration.player1_singh_kaur,
+          player1_dob: updatedRegistration.player1_dob,
+          player1_dob_proof: updatedRegistration.player1_dob_proof,
+          player1_email: updatedRegistration.player1_email,
+          player1_phone_number: updatedRegistration.player1_phone_number,
+          player1_emergency_contact_name:
+            updatedRegistration.player1_emergency_contact_name,
+          player1_emergency_contact_phone:
+            updatedRegistration.player1_emergency_contact_phone,
+          player1_father_name: updatedRegistration.player1_father_name,
+          player1_mother_name: updatedRegistration.player1_mother_name,
+          player1_city: updatedRegistration.player1_city,
+          player1_gatka_experience:
+            updatedRegistration.player1_gatka_experience,
+          player2_name: updatedRegistration.player2_name,
+          player2_singh_kaur: updatedRegistration.player2_singh_kaur,
+          player2_dob: updatedRegistration.player2_dob,
+          player2_dob_proof: updatedRegistration.player2_dob_proof,
+          player2_email: updatedRegistration.player2_email,
+          player2_phone_number: updatedRegistration.player2_phone_number,
+          player2_emergency_contact_name:
+            updatedRegistration.player2_emergency_contact_name,
+          player2_emergency_contact_phone:
+            updatedRegistration.player2_emergency_contact_phone,
+          player2_father_name: updatedRegistration.player2_father_name,
+          player2_mother_name: updatedRegistration.player2_mother_name,
+          player2_city: updatedRegistration.player2_city,
+          player2_gatka_experience:
+            updatedRegistration.player2_gatka_experience,
+          player3_name: updatedRegistration.player3_name,
+          player3_singh_kaur: updatedRegistration.player3_singh_kaur,
+          player3_dob: updatedRegistration.player3_dob,
+          player3_dob_proof: updatedRegistration.player3_dob_proof,
+          player3_email: updatedRegistration.player3_email,
+          player3_phone_number: updatedRegistration.player3_phone_number,
+          player3_emergency_contact_name:
+            updatedRegistration.player3_emergency_contact_name,
+          player3_emergency_contact_phone:
+            updatedRegistration.player3_emergency_contact_phone,
+          player3_father_name: updatedRegistration.player3_father_name,
+          player3_mother_name: updatedRegistration.player3_mother_name,
+          player3_city: updatedRegistration.player3_city,
+          player3_gatka_experience:
+            updatedRegistration.player3_gatka_experience,
+          backup_player: updatedRegistration.backup_player,
+          backup_name: updatedRegistration.backup_name,
+          backup_singh_kaur: updatedRegistration.backup_singh_kaur,
+          backup_dob: updatedRegistration.backup_dob,
+          backup_dob_proof: updatedRegistration.backup_dob_proof,
+          backup_email: updatedRegistration.backup_email,
+          backup_phone_number: updatedRegistration.backup_phone_number,
+          backup_emergency_contact_name:
+            updatedRegistration.backup_emergency_contact_name,
+          backup_emergency_contact_phone:
+            updatedRegistration.backup_emergency_contact_phone,
+          backup_father_name: updatedRegistration.backup_father_name,
+          backup_mother_name: updatedRegistration.backup_mother_name,
+          backup_city: updatedRegistration.backup_city,
+          backup_gatka_experience: updatedRegistration.backup_gatka_experience,
+          admin_notes: updatedRegistration.admin_notes,
+        }
+      );
+
+      if (result.error) {
+        console.error("Error saving registration:", result.error);
+        throw new Error("Failed to save registration");
+      }
+
+      // Update local state
+      setRegistrations((prev) =>
+        prev.map((reg) =>
+          reg.id === updatedRegistration.id ? updatedRegistration : reg
+        )
+      );
+
+      console.log("Registration saved successfully");
+    } catch (error) {
+      console.error("Error in handleSaveRegistration:", error);
+      throw error;
+    }
+  };
 
   // Filter and search registrations
   const filteredRegistrations = useMemo(() => {
@@ -360,18 +1102,18 @@ export default function RegistrationsPage() {
     <div className="flex-1 space-y-6 p-6">
       {/* Page Header */}
       <PageHeader title="Registrations">
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={handleExportClick}>
           <Download className="mr-2 h-4 w-4" />
           Export
         </Button>
-        <Button size="sm">
-          <Calendar className="mr-2 h-4 w-4" />
+        <Button size="sm" onClick={() => window.open("/register", "_blank")}>
+          <FileText className="mr-2 h-4 w-4" />
           New Registration
         </Button>
       </PageHeader>
 
       {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <StatCard
           title="Total Registrations"
           value={registrations.length}
@@ -408,6 +1150,14 @@ export default function RegistrationsPage() {
           icon={XCircle}
           iconColor="text-red-600"
           valueColor="text-2xl font-bold text-red-600"
+        />
+        <StatCard
+          title="Dropped"
+          value={registrations.filter((r) => r.status === "dropped").length}
+          description="Withdrew from tournament"
+          icon={Archive}
+          iconColor="text-gray-600"
+          valueColor="text-2xl font-bold text-gray-600"
         />
         <StatCard
           title="Total Players"
@@ -636,19 +1386,29 @@ export default function RegistrationsPage() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleViewDetails(registration)
+                                    }
+                                  >
                                     <Eye className="mr-2 h-4 w-4" />
                                     View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit Registration
-                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleCopyToken(registration.form_token)
+                                    }
+                                  >
+                                    <Copy className="mr-2 h-4 w-4" />
                                     Copy Token
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleDownloadPDF(registration)
+                                    }
+                                  >
+                                    <Download className="mr-2 h-4 w-4" />
                                     Download PDF
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -675,6 +1435,192 @@ export default function RegistrationsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Registration Detail Modal */}
+      {selectedRegistration && (
+        <RegistrationDetailModal
+          registration={selectedRegistration}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      )}
+
+      {/* Export Modal */}
+      {isExportModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">Export Registrations</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExportModalOpen(false)}
+              >
+                ✕
+              </Button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Filters Section */}
+              <div>
+                <h3 className="text-lg font-medium mb-4">Filters</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Status
+                    </label>
+                    <Select
+                      value={exportFilters.status}
+                      onValueChange={(value) =>
+                        setExportFilters((prev) => ({ ...prev, status: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="new submission">
+                          New Submission
+                        </SelectItem>
+                        <SelectItem value="in review">In Review</SelectItem>
+                        <SelectItem value="information requested">
+                          Information Requested
+                        </SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="denied">Denied</SelectItem>
+                        <SelectItem value="dropped">Dropped</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Division
+                    </label>
+                    <Select
+                      value={exportFilters.division}
+                      onValueChange={(value) =>
+                        setExportFilters((prev) => ({
+                          ...prev,
+                          division: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Divisions</SelectItem>
+                        <SelectItem value="Junior Kaurs">
+                          Junior Kaurs
+                        </SelectItem>
+                        <SelectItem value="Junior Singhs">
+                          Junior Singhs
+                        </SelectItem>
+                        <SelectItem value="Open Kaurs">Open Kaurs</SelectItem>
+                        <SelectItem value="Open Singhs">Open Singhs</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Date From
+                    </label>
+                    <Input
+                      type="date"
+                      value={exportFilters.dateFrom}
+                      onChange={(e) =>
+                        setExportFilters((prev) => ({
+                          ...prev,
+                          dateFrom: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Date To
+                    </label>
+                    <Input
+                      type="date"
+                      value={exportFilters.dateTo}
+                      onChange={(e) =>
+                        setExportFilters((prev) => ({
+                          ...prev,
+                          dateTo: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Column Selection Section */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium">
+                    Select Columns to Export
+                  </h3>
+                  <div className="space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={selectAllColumns}
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={deselectAllColumns}
+                    >
+                      Deselect All
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto border rounded-lg p-4">
+                  {availableColumns.map((column) => (
+                    <label
+                      key={column.key}
+                      className="flex items-center space-x-2 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={exportColumns.includes(column.key)}
+                        onChange={() => handleColumnToggle(column.key)}
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-sm">{column.label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="mt-2 text-sm text-gray-600">
+                  {exportColumns.length} column(s) selected
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsExportModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleExport}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export CSV
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

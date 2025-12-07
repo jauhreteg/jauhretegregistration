@@ -3,6 +3,7 @@
 import * as React from "react";
 import { AppSidebar } from "./_components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { ToastProvider } from "@/components/ui/toast-provider";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -60,10 +61,12 @@ export default function DashboardLayout({
 
   return (
     <UserContext.Provider value={{ user, loading }}>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>{children}</SidebarInset>
-      </SidebarProvider>
+      <ToastProvider>
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset>{children}</SidebarInset>
+        </SidebarProvider>
+      </ToastProvider>
     </UserContext.Provider>
   );
 }

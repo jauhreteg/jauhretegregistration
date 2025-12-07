@@ -182,11 +182,13 @@ export function AreaChartInteractive({
                     return (
                       <div className="rounded-lg border bg-background p-3 shadow-md">
                         <div className="font-medium mb-2">
-                          {new Date(label).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
+                          {label
+                            ? new Date(label).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "N/A"}
                         </div>
                         <div className="space-y-1">
                           {payload.map((entry, index) => (
