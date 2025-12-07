@@ -42,7 +42,7 @@ import {
   User,
   Edit2,
   Check,
-  XIcon,
+  XCircle,
   FileText,
   Eye,
   HelpCircle,
@@ -98,7 +98,7 @@ const ClickableStatusBadge = ({
       case "denied":
         return {
           className: "bg-red-100 text-red-800 border-red-200",
-          icon: <XIcon className="h-3 w-3" />,
+          icon: <XCircle className="h-3 w-3" />,
           label: "Denied",
         };
       case "dropped":
