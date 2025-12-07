@@ -69,13 +69,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     // Extract name from metadata with better fallbacks
+    const emailPrefix = user.email?.split("@")[0];
     const name =
       user.user_metadata?.full_name ||
       user.user_metadata?.display_name ||
       user.user_metadata?.name ||
       // Capitalize first letter of email prefix as last resort
-      user.email?.split("@")[0]?.charAt(0).toUpperCase() +
-        user.email?.split("@")[0]?.slice(1) ||
+      (emailPrefix
+        ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)
+        : "") ||
       "Admin User";
 
     return {

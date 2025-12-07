@@ -17,6 +17,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  Archive,
 } from "lucide-react";
 
 export default function Page() {
@@ -26,6 +27,7 @@ export default function Page() {
       pending: 0,
       approved: 0,
       denied: 0,
+      dropped: 0,
     },
     totalPlayers: 0,
     allPlayers: 0,
@@ -86,6 +88,7 @@ export default function Page() {
           pending: countsResult.data?.pending || 0,
           approved: countsResult.data?.approved || 0,
           denied: countsResult.data?.denied || 0,
+          dropped: countsResult.data?.dropped || 0,
         },
         totalPlayers: playersResult.data || 0,
         allPlayers: allPlayersResult.data || 0,
@@ -158,7 +161,7 @@ export default function Page() {
       <PageHeader title="Dashboard" />
 
       {/* TOP THIRD - Registration Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <StatCard
           title="Total Registrations"
           value={dashboardData.counts.total}
@@ -188,6 +191,14 @@ export default function Page() {
           icon={XCircle}
           iconColor="text-red-600"
           valueColor="text-2xl font-bold text-red-600"
+        />
+        <StatCard
+          title="Dropped"
+          value={dashboardData.counts.dropped}
+          description="Withdrew from tournament"
+          icon={Archive}
+          iconColor="text-gray-600"
+          valueColor="text-2xl font-bold text-gray-600"
         />
         <StatCard
           title="Total Players"
