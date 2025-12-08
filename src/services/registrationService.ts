@@ -53,6 +53,31 @@ export class RegistrationService {
   }
 
   /**
+   * Get a single registration by form token
+   */
+  static async getRegistrationByToken(
+    formToken: string
+  ): Promise<{ data: Registration | null; error: any }> {
+    try {
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("*")
+        .eq("form_token", formToken)
+        .single();
+
+      if (error) {
+        console.error("Error fetching registration by token:", error);
+        return { data: null, error };
+      }
+
+      return { data: data as Registration, error: null };
+    } catch (error) {
+      console.error("Unexpected error fetching registration by token:", error);
+      return { data: null, error };
+    }
+  }
+
+  /**
    * Get registration summary data (using the view for better performance)
    */
   static async getRegistrationSummaries(filters?: {

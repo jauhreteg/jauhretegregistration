@@ -32,6 +32,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { FilePreview } from "@/components/FilePreview";
 import {
   Save,
   X,
@@ -60,6 +61,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PDFGenerator } from "@/components/PDFGenerator";
+import { DatePicker } from "@/components/date-picker";
 
 // ClickableStatusBadge component
 const ClickableStatusBadge = ({
@@ -259,6 +262,7 @@ const EditableField = React.memo(
     onCancel,
     onChange,
     isSaving,
+    dropdownOptions,
   }: {
     fieldName: string;
     label: string;
@@ -273,6 +277,7 @@ const EditableField = React.memo(
     onCancel: () => void;
     onChange: (value: string) => void;
     isSaving: boolean;
+    dropdownOptions?: Array<{ value: string; label: string }>;
   }) => {
     if (disabled) {
       return (
@@ -308,7 +313,20 @@ const EditableField = React.memo(
         <div>
           <Label className="text-sm font-medium">{label}</Label>
           <div className="mt-1 flex items-center gap-2">
-            {multiline ? (
+            {dropdownOptions ? (
+              <Select value={currentValue || ""} onValueChange={onChange}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {dropdownOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : multiline ? (
               <Textarea
                 value={currentValue || ""}
                 onChange={(e) => onChange(e.target.value)}
@@ -316,12 +334,21 @@ const EditableField = React.memo(
                 rows={2}
                 autoFocus
               />
+            ) : type === "date" ? (
+              <DatePicker
+                value={currentValue ? new Date(currentValue) : undefined}
+                onChange={(date) =>
+                  onChange(date ? date.toISOString().split("T")[0] : "")
+                }
+                placeholder="Pick a date"
+                className="flex-1"
+              />
             ) : (
               <Input
                 type={type}
                 value={currentValue || ""}
                 onChange={(e) => onChange(e.target.value)}
-                className="flex-1"
+                className={`flex-1 ${type === "number" ? "w-24" : ""}`}
                 autoFocus
               />
             )}
@@ -341,12 +368,22 @@ const EditableField = React.memo(
       );
     }
 
+    // Get display value for dropdown options
+    const getDisplayValue = () => {
+      if (!value) return "Not provided";
+      if (dropdownOptions) {
+        const option = dropdownOptions.find((opt) => opt.value === value);
+        return option ? option.label : value;
+      }
+      return value;
+    };
+
     return (
       <div>
         <Label className="text-sm font-medium">{label}</Label>
         <div className="mt-1 flex items-center justify-between group">
           <div className="flex-1 px-3 py-2 border rounded text-sm bg-gray-50">
-            {value || "Not provided"}
+            {getDisplayValue()}
           </div>
           <Button
             size="sm"
@@ -375,6 +412,14 @@ function RegistrationDetailModal({
   if (!registration) {
     return null;
   }
+
+  const handleDownloadPDF = async () => {
+    try {
+      await PDFGenerator.downloadPDF(registration);
+    } catch (error) {
+      console.error("Failed to download PDF:", error);
+    }
+  };
 
   const { user } = useUser();
   const { showUpdateSuccess, showSaveSuccess, showError } =
@@ -584,10 +629,42 @@ function RegistrationDetailModal({
 
   // Memoized field change handler
   const handleFieldChange = useCallback((fieldName: string, value: string) => {
-    setEditedRegistration((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
+    setEditedRegistration((prev) => {
+      if (fieldName === "backup_player") {
+        const backupPlayerValue = value === "true";
+        // When setting backup_player to true, ensure backup fields meet the database constraint
+        if (backupPlayerValue && !prev.backup_player) {
+          return {
+            ...prev,
+            backup_player: backupPlayerValue,
+            // Set required fields to meet constraint: backup_name and backup_email must be NOT NULL
+            backup_name: prev.backup_name || "TBD",
+            backup_singh_kaur: prev.backup_singh_kaur || "Singh",
+            backup_email: prev.backup_email || "tbd@example.com",
+            backup_phone_number: prev.backup_phone_number || "",
+            backup_dob: prev.backup_dob || null,
+            backup_city: prev.backup_city || "",
+            backup_father_name: prev.backup_father_name || "",
+            backup_mother_name: prev.backup_mother_name || "",
+            backup_emergency_contact_name:
+              prev.backup_emergency_contact_name || "",
+            backup_emergency_contact_phone:
+              prev.backup_emergency_contact_phone || "",
+            backup_gatka_experience: prev.backup_gatka_experience || "",
+            backup_dob_proof: prev.backup_dob_proof || [],
+          };
+        }
+        return {
+          ...prev,
+          backup_player: backupPlayerValue,
+        };
+      }
+
+      return {
+        ...prev,
+        [fieldName]: value,
+      };
+    });
   }, []);
 
   // Wrapper function to provide all EditableField props
@@ -599,6 +676,7 @@ function RegistrationDetailModal({
       type?: string;
       multiline?: boolean;
       disabled?: boolean;
+      dropdownOptions?: Array<{ value: string; label: string }>;
     }) => {
       const isEditing = editingFields.has(props.fieldName);
       const currentValue = editedRegistration[
@@ -636,42 +714,6 @@ function RegistrationDetailModal({
     documents: string[] | null;
     label: string;
   }) => {
-    const [loadingStates, setLoadingStates] = React.useState<
-      Record<number, boolean>
-    >({});
-    const [imageErrors, setImageErrors] = React.useState<
-      Record<number, boolean>
-    >({});
-
-    const isImageFile = (url: string) => {
-      const imageExtensions = [
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".gif",
-        ".bmp",
-        ".webp",
-      ];
-      const lowerUrl = url.toLowerCase();
-      return (
-        imageExtensions.some((ext) => lowerUrl.includes(ext)) ||
-        lowerUrl.includes("image")
-      );
-    };
-
-    const handleImageLoad = (index: number) => {
-      setLoadingStates((prev) => ({ ...prev, [index]: false }));
-    };
-
-    const handleImageError = (index: number) => {
-      setLoadingStates((prev) => ({ ...prev, [index]: false }));
-      setImageErrors((prev) => ({ ...prev, [index]: true }));
-    };
-
-    const handleImageLoadStart = (index: number) => {
-      setLoadingStates((prev) => ({ ...prev, [index]: true }));
-    };
-
     if (!documents || documents.length === 0) {
       return (
         <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded">
@@ -683,74 +725,9 @@ function RegistrationDetailModal({
     }
 
     return (
-      <div className="mt-2 space-y-3">
+      <div className="mt-2 flex flex-wrap gap-6">
         {documents.map((doc, index) => (
-          <div
-            key={index}
-            className="border rounded-lg overflow-hidden bg-white"
-          >
-            {/* Header */}
-            <div className="p-3 bg-gray-50 border-b">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Paperclip className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium">
-                    {label} {documents.length > 1 ? `${index + 1}` : ""}
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => window.open(doc, "_blank")}
-                  className="flex items-center gap-1"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  <span className="text-xs">Open</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Preview */}
-            <div className="p-3">
-              {isImageFile(doc) ? (
-                <div className="relative">
-                  {loadingStates[index] && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                    </div>
-                  )}
-                  {imageErrors[index] ? (
-                    <div className="flex items-center justify-center p-8 bg-gray-100 rounded text-gray-500">
-                      <div className="text-center">
-                        <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Unable to load image</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <img
-                      src={doc}
-                      alt={`${label} ${index + 1}`}
-                      className="w-full h-48 object-cover rounded border"
-                      onLoadStart={() => handleImageLoadStart(index)}
-                      onLoad={() => handleImageLoad(index)}
-                      onError={() => handleImageError(index)}
-                      loading="lazy"
-                    />
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center p-8 bg-gray-100 rounded">
-                  <div className="text-center">
-                    <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p className="text-sm text-gray-600">Document file</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Click "Open" to view
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <FilePreview key={index} url={doc} index={index} label={label} />
         ))}
       </div>
     );
@@ -836,17 +813,19 @@ function RegistrationDetailModal({
               {/* Coach Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Coach Information</CardTitle>
+                  <CardTitle className="text-lg">
+                    Senior Gatkai Coach Information
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {renderEditableField({
                     fieldName: "coach_name",
-                    label: "Coach Name",
+                    label: "Senior Gatkai Coach Name",
                     value: editedRegistration.coach_name,
                   })}
                   {renderEditableField({
                     fieldName: "coach_email",
-                    label: "Coach Email",
+                    label: "Senior Gatkai Coach Email",
                     value: editedRegistration.coach_email,
                     type: "email",
                   })}
@@ -871,6 +850,10 @@ function RegistrationDetailModal({
                       fieldName: "player1_singh_kaur",
                       label: "Singh/Kaur",
                       value: editedRegistration.player1_singh_kaur,
+                      dropdownOptions: [
+                        { value: "Singh", label: "Singh" },
+                        { value: "Kaur", label: "Kaur" },
+                      ],
                     })}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -891,6 +874,7 @@ function RegistrationDetailModal({
                       fieldName: "player1_dob",
                       label: "Date of Birth",
                       value: editedRegistration.player1_dob,
+                      type: "date",
                     })}
                     {renderEditableField({
                       fieldName: "player1_city",
@@ -924,9 +908,9 @@ function RegistrationDetailModal({
                   </div>
                   {renderEditableField({
                     fieldName: "player1_gatka_experience",
-                    label: "Gatka Experience",
+                    label: "Gatka Experience (years)",
                     value: editedRegistration.player1_gatka_experience,
-                    multiline: true,
+                    type: "number",
                   })}
                   {(editedRegistration.division === "Junior Kaurs" ||
                     editedRegistration.division === "Junior Singhs") && (
@@ -961,6 +945,10 @@ function RegistrationDetailModal({
                       fieldName: "player2_singh_kaur",
                       label: "Singh/Kaur",
                       value: editedRegistration.player2_singh_kaur,
+                      dropdownOptions: [
+                        { value: "Singh", label: "Singh" },
+                        { value: "Kaur", label: "Kaur" },
+                      ],
                     })}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -981,6 +969,7 @@ function RegistrationDetailModal({
                       fieldName: "player2_dob",
                       label: "Date of Birth",
                       value: editedRegistration.player2_dob,
+                      type: "date",
                     })}
                     {renderEditableField({
                       fieldName: "player2_city",
@@ -1014,9 +1003,9 @@ function RegistrationDetailModal({
                   </div>
                   {renderEditableField({
                     fieldName: "player2_gatka_experience",
-                    label: "Gatka Experience",
+                    label: "Gatka Experience (years)",
                     value: editedRegistration.player2_gatka_experience,
-                    multiline: true,
+                    type: "number",
                   })}
                   {(editedRegistration.division === "Junior Kaurs" ||
                     editedRegistration.division === "Junior Singhs") && (
@@ -1051,6 +1040,10 @@ function RegistrationDetailModal({
                       fieldName: "player3_singh_kaur",
                       label: "Singh/Kaur",
                       value: editedRegistration.player3_singh_kaur,
+                      dropdownOptions: [
+                        { value: "Singh", label: "Singh" },
+                        { value: "Kaur", label: "Kaur" },
+                      ],
                     })}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -1071,6 +1064,7 @@ function RegistrationDetailModal({
                       fieldName: "player3_dob",
                       label: "Date of Birth",
                       value: editedRegistration.player3_dob,
+                      type: "date",
                     })}
                     {renderEditableField({
                       fieldName: "player3_city",
@@ -1104,9 +1098,9 @@ function RegistrationDetailModal({
                   </div>
                   {renderEditableField({
                     fieldName: "player3_gatka_experience",
-                    label: "Gatka Experience",
+                    label: "Gatka Experience (years)",
                     value: editedRegistration.player3_gatka_experience,
-                    multiline: true,
+                    type: "number",
                   })}
                   {(editedRegistration.division === "Junior Kaurs" ||
                     editedRegistration.division === "Junior Singhs") && (
@@ -1124,97 +1118,121 @@ function RegistrationDetailModal({
               </Card>
 
               {/* Backup Player Information */}
-              {editedRegistration.backup_player && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      Backup Player Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      {renderEditableField({
-                        fieldName: "backup_name",
-                        label: "Backup Player Name",
-                        value: editedRegistration.backup_name,
-                      })}
-                      {renderEditableField({
-                        fieldName: "backup_singh_kaur",
-                        label: "Singh/Kaur",
-                        value: editedRegistration.backup_singh_kaur,
-                      })}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      {renderEditableField({
-                        fieldName: "backup_email",
-                        label: "Email",
-                        value: editedRegistration.backup_email,
-                        type: "email",
-                      })}
-                      {renderEditableField({
-                        fieldName: "backup_phone_number",
-                        label: "Phone",
-                        value: editedRegistration.backup_phone_number,
-                      })}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      {renderEditableField({
-                        fieldName: "backup_dob",
-                        label: "Date of Birth",
-                        value: editedRegistration.backup_dob,
-                      })}
-                      {renderEditableField({
-                        fieldName: "backup_city",
-                        label: "City",
-                        value: editedRegistration.backup_city,
-                      })}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      {renderEditableField({
-                        fieldName: "backup_father_name",
-                        label: "Father's Name",
-                        value: editedRegistration.backup_father_name,
-                      })}
-                      {renderEditableField({
-                        fieldName: "backup_mother_name",
-                        label: "Mother's Name",
-                        value: editedRegistration.backup_mother_name,
-                      })}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      {renderEditableField({
-                        fieldName: "backup_emergency_contact_name",
-                        label: "Emergency Contact Name",
-                        value: editedRegistration.backup_emergency_contact_name,
-                      })}
-                      {renderEditableField({
-                        fieldName: "backup_emergency_contact_phone",
-                        label: "Emergency Contact Phone",
-                        value:
-                          editedRegistration.backup_emergency_contact_phone,
-                      })}
-                    </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    Backup Player Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Backup Player Yes/No */}
+                  <div className="grid grid-cols-1 gap-4">
                     {renderEditableField({
-                      fieldName: "backup_gatka_experience",
-                      label: "Gatka Experience",
-                      value: editedRegistration.backup_gatka_experience,
-                      multiline: true,
+                      fieldName: "backup_player",
+                      label: "Has Backup Player",
+                      value: editedRegistration.backup_player
+                        ? "true"
+                        : "false",
+                      dropdownOptions: [
+                        { value: "true", label: "Yes" },
+                        { value: "false", label: "No" },
+                      ],
                     })}
-                    {(editedRegistration.division === "Junior Kaurs" ||
-                      editedRegistration.division === "Junior Singhs") && (
-                      <div>
-                        <Label className="text-sm font-medium">
-                          Backup Player Date of Birth Proof
-                        </Label>
-                        <DocumentViewer
-                          documents={editedRegistration.backup_dob_proof}
-                          label="Backup Player DOB Document"
-                        />
+                  </div>
+
+                  {/* Show backup player details only if backup_player is true */}
+                  {editedRegistration.backup_player && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        {renderEditableField({
+                          fieldName: "backup_name",
+                          label: "Backup Player Name",
+                          value: editedRegistration.backup_name,
+                        })}
+                        {renderEditableField({
+                          fieldName: "backup_singh_kaur",
+                          label: "Singh/Kaur",
+                          value: editedRegistration.backup_singh_kaur,
+                          dropdownOptions: [
+                            { value: "Singh", label: "Singh" },
+                            { value: "Kaur", label: "Kaur" },
+                          ],
+                        })}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+                      <div className="grid grid-cols-2 gap-4">
+                        {renderEditableField({
+                          fieldName: "backup_email",
+                          label: "Email",
+                          value: editedRegistration.backup_email,
+                          type: "email",
+                        })}
+                        {renderEditableField({
+                          fieldName: "backup_phone_number",
+                          label: "Phone",
+                          value: editedRegistration.backup_phone_number,
+                        })}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {renderEditableField({
+                          fieldName: "backup_dob",
+                          label: "Date of Birth",
+                          value: editedRegistration.backup_dob,
+                          type: "date",
+                        })}
+                        {renderEditableField({
+                          fieldName: "backup_city",
+                          label: "City",
+                          value: editedRegistration.backup_city,
+                        })}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {renderEditableField({
+                          fieldName: "backup_father_name",
+                          label: "Father's Name",
+                          value: editedRegistration.backup_father_name,
+                        })}
+                        {renderEditableField({
+                          fieldName: "backup_mother_name",
+                          label: "Mother's Name",
+                          value: editedRegistration.backup_mother_name,
+                        })}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {renderEditableField({
+                          fieldName: "backup_emergency_contact_name",
+                          label: "Emergency Contact Name",
+                          value:
+                            editedRegistration.backup_emergency_contact_name,
+                        })}
+                        {renderEditableField({
+                          fieldName: "backup_emergency_contact_phone",
+                          label: "Emergency Contact Phone",
+                          value:
+                            editedRegistration.backup_emergency_contact_phone,
+                        })}
+                      </div>
+                      {renderEditableField({
+                        fieldName: "backup_gatka_experience",
+                        label: "Gatka Experience",
+                        value: editedRegistration.backup_gatka_experience,
+                        type: "number",
+                      })}
+                      {(editedRegistration.division === "Junior Kaurs" ||
+                        editedRegistration.division === "Junior Singhs") && (
+                        <div>
+                          <Label className="text-sm font-medium">
+                            Backup Player Date of Birth Proof
+                          </Label>
+                          <DocumentViewer
+                            documents={editedRegistration.backup_dob_proof}
+                            label="Backup Player DOB Document"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Bottom spacing for scroll */}
               <div className="h-20"></div>
@@ -1324,14 +1342,22 @@ function RegistrationDetailModal({
 
         {/* Footer */}
         <div className="flex-shrink-0 bg-white border-t px-6 py-3">
-          <div className="flex items-center justify-end gap-3">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
+          <div className="flex items-center justify-between">
+            <div>
+              <Button variant="outline" onClick={handleDownloadPDF}>
+                <Download className="mr-2 h-4 w-4" />
+                Download PDF
+              </Button>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={isSaving}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

@@ -25,7 +25,7 @@ const ScrambledText: React.FC<ScrambledTextProps> = ({
   const [scrambledText, setScrambledText] = useState("");
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
   const textContent = children?.toString() || "";
 
   const getRandomChar = useCallback(() => {

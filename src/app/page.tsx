@@ -160,20 +160,34 @@ export default function Home() {
               </h1>
             </div>
 
-            <Button
-              onClick={handleStartRegistration}
-              className={`mt-6 px-6 py-2 text-sm font-semibold uppercase rounded-lg transition-colors ${
-                activeConfig.effects.enableFastTransitions
-                  ? "duration-75"
-                  : "duration-300"
-              } font-montserrat bg-black text-white ${
-                activeConfig.effects.enableButtonHoverAnimation
-                  ? "hover:bg-[#F5A623] hover:text-white"
-                  : ""
-              }`}
-            >
-              START REGISTRATION
-            </Button>
+            <div className="flex flex-col space-y-3 mt-6">
+              <Button
+                onClick={handleStartRegistration}
+                className={`px-6 py-2 text-sm font-semibold uppercase rounded-lg transition-colors ${
+                  activeConfig.effects.enableFastTransitions
+                    ? "duration-75"
+                    : "duration-300"
+                } font-montserrat bg-black text-white ${
+                  activeConfig.effects.enableButtonHoverAnimation
+                    ? "hover:bg-[#F5A623] hover:text-white"
+                    : ""
+                }`}
+              >
+                START REGISTRATION
+              </Button>
+
+              <Button
+                onClick={() => router.push("/view-registration")}
+                variant="outline"
+                className={`px-6 py-2 text-sm font-semibold uppercase rounded-lg transition-colors ${
+                  activeConfig.effects.enableFastTransitions
+                    ? "duration-75"
+                    : "duration-300"
+                } font-montserrat bg-white text-black border-2 border-gray-300 hover:bg-black hover:text-white`}
+              >
+                VIEW/EDIT REGISTRATION
+              </Button>
+            </div>
           </div>
         </div>
       </div>

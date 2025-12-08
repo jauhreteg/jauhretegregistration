@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -48,7 +48,7 @@ export default function TeamForm({
   playerNames,
 }: TeamFormProps) {
   // Auto-update player order with actual names when available
-  React.useEffect(() => {
+  useEffect(() => {
     // Check if current values are still the generic defaults and update them
     if (
       teamData.playerOrder1 === "Player 1" &&
