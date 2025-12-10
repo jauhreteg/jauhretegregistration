@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -48,7 +48,7 @@ export default function TeamForm({
   playerNames,
 }: TeamFormProps) {
   // Auto-update player order with actual names when available
-  React.useEffect(() => {
+  useEffect(() => {
     // Check if current values are still the generic defaults and update them
     if (
       teamData.playerOrder1 === "Player 1" &&
@@ -113,48 +113,55 @@ export default function TeamForm({
 
       {/* Team Leadership Section */}
       <div className="space-y-4">
-        {/* Ustaad Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="ustadName">
-              Ustaad Name{" "}
-              <RequiredAsterisk fieldName="ustadName" isRequired={isRequired} />
-            </Label>
-            <Input
-              id="ustadName"
-              value={teamData.ustadName}
-              onChange={(e) => handleFieldChange("ustadName", e.target.value)}
-              placeholder="Enter ustaad name"
-              className={`h-10 ${
-                false
-                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
-                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
-              }`}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="ustadEmail">
-              Ustaad Email{" "}
-              <RequiredAsterisk
-                fieldName="ustadEmail"
-                isRequired={isRequired}
+        {
+          /* Ustad Information */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="ustadName">
+                Ustad Name{" "}
+                <RequiredAsterisk
+                  fieldName="ustadName"
+                  isRequired={isRequired}
+                />
+              </Label>
+              <Input
+                id="ustadName"
+                value={teamData.ustadName}
+                onChange={(e) => handleFieldChange("ustadName", e.target.value)}
+                placeholder="Enter ustad name"
+                className={`h-10 ${
+                  false
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
               />
-            </Label>
-            <Input
-              id="ustadEmail"
-              type="email"
-              value={teamData.ustadEmail || ""}
-              onChange={(e) => handleFieldChange("ustadEmail", e.target.value)}
-              placeholder="ustaad@example.com"
-              className={`h-10 ${
-                false
-                  ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
-                  : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
-              }`}
-            />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ustadEmail">
+                Ustad Email{" "}
+                <RequiredAsterisk
+                  fieldName="ustadEmail"
+                  isRequired={isRequired}
+                />
+              </Label>
+              <Input
+                id="ustadEmail"
+                type="email"
+                value={teamData.ustadEmail || ""}
+                onChange={(e) =>
+                  handleFieldChange("ustadEmail", e.target.value)
+                }
+                placeholder="ustad@example.com"
+                className={`h-10 ${
+                  false
+                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
+                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
+                }`}
+              />
+            </div>
           </div>
-        </div>
+        }
 
         {/* Senior Gatkai Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

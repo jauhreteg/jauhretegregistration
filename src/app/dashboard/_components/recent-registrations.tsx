@@ -26,6 +26,7 @@ import {
   Clock,
   FileText,
   Eye,
+  Edit2,
   HelpCircle,
   CheckCircle,
   XCircle,
@@ -125,6 +126,13 @@ const StatusBadge = ({ status }: { status: string }) => {
             "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800",
           icon: <HelpCircle className="h-3 w-3" />,
           label: "Info Requested",
+        };
+      case "updated information":
+        return {
+          className:
+            "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800",
+          icon: <Edit2 className="h-3 w-3" />,
+          label: "Updated Info",
         };
       case "approved":
         return {

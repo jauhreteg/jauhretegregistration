@@ -367,8 +367,8 @@ export const FIELD_CONFIG: Record<string, FieldConfig[]> = {
     { field: "city", label: "City", required: false },
     { field: "state", label: "State", required: false },
     { field: "country", label: "Country", required: false },
-    { field: "ustadName", label: "Ustaad Name", required: false },
-    { field: "ustadEmail", label: "Ustaad Email", required: false },
+    { field: "ustadName", label: "Ustad Name", required: false },
+    { field: "ustadEmail", label: "Ustad Email", required: false },
     { field: "seniorGatkaiName", label: "Senior Gatkai Name", required: false },
     {
       field: "seniorGatkaiEmail",

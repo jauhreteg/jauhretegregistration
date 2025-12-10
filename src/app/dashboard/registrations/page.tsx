@@ -47,6 +47,7 @@ import {
   Download,
   Eye,
   Edit,
+  Edit2,
   Copy,
   MoreHorizontal,
   Calendar,
@@ -67,6 +68,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import { useToast } from "@/components/ui/toast-provider";
 import RegistrationDetailModal from "@/components/RegistrationDetailModal";
+import { PDFGenerator } from "@/components/PDFGenerator";
 
 // Using Registration interface from database types
 
@@ -122,6 +124,13 @@ const StatusBadge = ({ status }: { status: StatusType }) => {
             "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800",
           icon: <HelpCircle className="h-3 w-3" />,
           label: "Info Requested",
+        };
+      case "updated information":
+        return {
+          className:
+            "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800",
+          icon: <Edit2 className="h-3 w-3" />,
+          label: "Updated Info",
         };
       case "approved":
         return {
@@ -204,8 +213,8 @@ export default function RegistrationsPage() {
     { key: "submission_date_time", label: "Submission Date" },
     { key: "ustad_name", label: "Ustad Name" },
     { key: "ustad_email", label: "Ustad Email" },
-    { key: "coach_name", label: "Coach Name" },
-    { key: "coach_email", label: "Coach Email" },
+    { key: "coach_name", label: "Senior Gatkai Coach Name" },
+    { key: "coach_email", label: "Senior Gatkai Coach Email" },
     { key: "player1_name", label: "Player 1 Name" },
     { key: "player1_singh_kaur", label: "Player 1 Singh/Kaur" },
     { key: "player1_dob", label: "Player 1 DOB" },
@@ -368,17 +377,7 @@ export default function RegistrationsPage() {
   // Download PDF handler
   const handleDownloadPDF = async (registration: Registration) => {
     try {
-      // For now, we'll implement a basic approach
-      // You could enhance this with a proper PDF generation library like jsPDF or Puppeteer
-      const content = generatePDFContent(registration);
-
-      // Create a simple HTML page that can be printed as PDF
-      const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write(content);
-        printWindow.document.close();
-        printWindow.print();
-      }
+      await PDFGenerator.downloadPDF(registration);
     } catch (error) {
       console.error("Failed to download PDF:", error);
     }
@@ -540,401 +539,15 @@ export default function RegistrationsPage() {
     setIsExportModalOpen(false);
   };
 
-  // Generate status badge HTML for PDF
-  const getStatusBadgeHTML = (status: StatusType) => {
-    const getStatusConfig = (status: StatusType) => {
-      switch (status) {
-        case "new submission":
-          return {
-            className: "status-new-submission",
-            label: "New Submission",
-          };
-        case "in review":
-          return {
-            className: "status-in-review",
-            label: "In Review",
-          };
-        case "information requested":
-          return {
-            className: "status-information-requested",
-            label: "Info Requested",
-          };
-        case "approved":
-          return {
-            className: "status-approved",
-            label: "Approved",
-          };
-        case "denied":
-          return {
-            className: "status-denied",
-            label: "Denied",
-          };
-        case "dropped":
-          return {
-            className: "status-dropped",
-            label: "Dropped",
-          };
-        default:
-          return {
-            className: "status-new-submission",
-            label:
-              String(status).charAt(0).toUpperCase() + String(status).slice(1),
-          };
-      }
-    };
-
-    const config = getStatusConfig(status);
-    return `<span class="status-badge ${config.className}">${config.label}</span>`;
-  };
-
-  // Generate PDF content
-  const generatePDFContent = (registration: Registration) => {
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Registration - ${registration.form_token}</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .section { margin-bottom: 25px; page-break-inside: avoid; }
-          .field { margin: 8px 0; }
-          .label { font-weight: bold; display: inline-block; min-width: 120px; }
-          table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-          th, td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }
-          th { background-color: #f5f5f5; font-weight: bold; }
-          .player-section { margin-bottom: 20px; }
-          .player-header { background-color: #f8f9fa; padding: 8px; margin: 10px 0; font-weight: bold; border-left: 4px solid #007bff; }
-          .status-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid; }
-          .status-new-submission { background-color: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
-          .status-in-review { background-color: #fef3c7; color: #a16207; border-color: #fde68a; }
-          .status-information-requested { background-color: #fed7aa; color: #c2410c; border-color: #fdba74; }
-          .status-approved { background-color: #dcfce7; color: #15803d; border-color: #bbf7d0; }
-          .status-denied { background-color: #fee2e2; color: #dc2626; border-color: #fecaca; }
-          .status-dropped { background-color: #f3f4f6; color: #374151; border-color: #d1d5db; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>Registration Details</h1>
-          <h2>${registration.team_name}</h2>
-          <p><strong>Form Token:</strong> ${registration.form_token}</p>
-        </div>
-
-        <!-- Form Metadata Section -->
-        <div class="section">
-          <h3>Form Metadata</h3>
-          <div class="field"><span class="label">Form Token:</span> ${
-            registration.form_token
-          }</div>
-          <div class="field"><span class="label">Status:</span> ${getStatusBadgeHTML(
-            registration.status
-          )}</div>
-          <div class="field"><span class="label">Division:</span> ${
-            registration.division
-          }</div>
-          <div class="field"><span class="label">Submitted:</span> ${new Date(
-            registration.submission_date_time
-          ).toLocaleString()}</div>
-          <div class="field"><span class="label">Created:</span> ${new Date(
-            registration.created_at
-          ).toLocaleString()}</div>
-          <div class="field"><span class="label">Last Updated:</span> ${new Date(
-            registration.updated_at
-          ).toLocaleString()}</div>
-        </div>
-
-        <!-- Team Information Section -->
-        <div class="section">
-          <h3>Team Information</h3>
-          <div class="field"><span class="label">Team Name:</span> ${
-            registration.team_name
-          }</div>
-          <div class="field"><span class="label">Location:</span> ${
-            registration.team_location || "N/A"
-          }</div>
-          
-          <h4 style="margin-top: 20px;">Ustad Information</h4>
-          <div class="field"><span class="label">Ustad Name:</span> ${
-            registration.ustad_name || "N/A"
-          }</div>
-          <div class="field"><span class="label">Ustad Email:</span> ${
-            registration.ustad_email || "N/A"
-          }</div>
-          
-          <h4 style="margin-top: 20px;">Senior Coach Information</h4>
-          <div class="field"><span class="label">Senior Coach Name:</span> ${
-            registration.coach_name || "N/A"
-          }</div>
-          <div class="field"><span class="label">Senior Coach Email:</span> ${
-            registration.coach_email || "N/A"
-          }</div>
-          
-          <h4 style="margin-top: 20px;">Player Order</h4>
-          <div class="field"><span class="label">Default Player Order:</span> ${
-            registration.player_order || "N/A"
-          }</div>
-        </div>
-
-        <!-- Player Information Section -->
-        <div class="section">
-          <h3>Player Information</h3>
-          
-          <div class="player-section">
-            <div class="player-header">Player 1</div>
-            <table>
-              <tr><th>Field</th><th>Value</th></tr>
-              <tr><td><strong>Name</strong></td><td>${
-                registration.player1_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Date of Birth</strong></td><td>${
-                registration.player1_dob || "N/A"
-              }</td></tr>
-              <tr><td><strong>Singh/Kaur</strong></td><td>${
-                registration.player1_singh_kaur || "N/A"
-              }</td></tr>
-              <tr><td><strong>Phone</strong></td><td>${
-                registration.player1_phone_number || "N/A"
-              }</td></tr>
-              <tr><td><strong>Email</strong></td><td>${
-                registration.player1_email || "N/A"
-              }</td></tr>
-              <tr><td><strong>City</strong></td><td>${
-                registration.player1_city || "N/A"
-              }</td></tr>
-              <tr><td><strong>Father's Name</strong></td><td>${
-                registration.player1_father_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Mother's Name</strong></td><td>${
-                registration.player1_mother_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Contact</strong></td><td>${
-                registration.player1_emergency_contact_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Phone</strong></td><td>${
-                registration.player1_emergency_contact_phone || "N/A"
-              }</td></tr>
-              <tr><td><strong>Gatka Experience</strong></td><td>${
-                registration.player1_gatka_experience || "N/A"
-              }</td></tr>
-            </table>
-          </div>
-
-          <div class="player-section">
-            <div class="player-header">Player 2</div>
-            <table>
-              <tr><th>Field</th><th>Value</th></tr>
-              <tr><td><strong>Name</strong></td><td>${
-                registration.player2_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Date of Birth</strong></td><td>${
-                registration.player2_dob || "N/A"
-              }</td></tr>
-              <tr><td><strong>Singh/Kaur</strong></td><td>${
-                registration.player2_singh_kaur || "N/A"
-              }</td></tr>
-              <tr><td><strong>Phone</strong></td><td>${
-                registration.player2_phone_number || "N/A"
-              }</td></tr>
-              <tr><td><strong>Email</strong></td><td>${
-                registration.player2_email || "N/A"
-              }</td></tr>
-              <tr><td><strong>City</strong></td><td>${
-                registration.player2_city || "N/A"
-              }</td></tr>
-              <tr><td><strong>Father's Name</strong></td><td>${
-                registration.player2_father_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Mother's Name</strong></td><td>${
-                registration.player2_mother_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Contact</strong></td><td>${
-                registration.player2_emergency_contact_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Phone</strong></td><td>${
-                registration.player2_emergency_contact_phone || "N/A"
-              }</td></tr>
-              <tr><td><strong>Gatka Experience</strong></td><td>${
-                registration.player2_gatka_experience || "N/A"
-              }</td></tr>
-            </table>
-          </div>
-
-          <div class="player-section">
-            <div class="player-header">Player 3</div>
-            <table>
-              <tr><th>Field</th><th>Value</th></tr>
-              <tr><td><strong>Name</strong></td><td>${
-                registration.player3_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Date of Birth</strong></td><td>${
-                registration.player3_dob || "N/A"
-              }</td></tr>
-              <tr><td><strong>Singh/Kaur</strong></td><td>${
-                registration.player3_singh_kaur || "N/A"
-              }</td></tr>
-              <tr><td><strong>Phone</strong></td><td>${
-                registration.player3_phone_number || "N/A"
-              }</td></tr>
-              <tr><td><strong>Email</strong></td><td>${
-                registration.player3_email || "N/A"
-              }</td></tr>
-              <tr><td><strong>City</strong></td><td>${
-                registration.player3_city || "N/A"
-              }</td></tr>
-              <tr><td><strong>Father's Name</strong></td><td>${
-                registration.player3_father_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Mother's Name</strong></td><td>${
-                registration.player3_mother_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Contact</strong></td><td>${
-                registration.player3_emergency_contact_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Phone</strong></td><td>${
-                registration.player3_emergency_contact_phone || "N/A"
-              }</td></tr>
-              <tr><td><strong>Gatka Experience</strong></td><td>${
-                registration.player3_gatka_experience || "N/A"
-              }</td></tr>
-            </table>
-          </div>
-
-          <div class="player-section">
-            <div class="player-header">Backup Player</div>
-            <table>
-              <tr><th>Field</th><th>Value</th></tr>
-              <tr><td><strong>Name</strong></td><td>${
-                registration.backup_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Date of Birth</strong></td><td>${
-                registration.backup_dob || "N/A"
-              }</td></tr>
-              <tr><td><strong>Singh/Kaur</strong></td><td>${
-                registration.backup_singh_kaur || "N/A"
-              }</td></tr>
-              <tr><td><strong>Phone</strong></td><td>${
-                registration.backup_phone_number || "N/A"
-              }</td></tr>
-              <tr><td><strong>Email</strong></td><td>${
-                registration.backup_email || "N/A"
-              }</td></tr>
-              <tr><td><strong>City</strong></td><td>${
-                registration.backup_city || "N/A"
-              }</td></tr>
-              <tr><td><strong>Father's Name</strong></td><td>${
-                registration.backup_father_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Mother's Name</strong></td><td>${
-                registration.backup_mother_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Contact</strong></td><td>${
-                registration.backup_emergency_contact_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Phone</strong></td><td>${
-                registration.backup_emergency_contact_phone || "N/A"
-              }</td></tr>
-              <tr><td><strong>Gatka Experience</strong></td><td>${
-                registration.backup_gatka_experience || "N/A"
-              }</td></tr>
-            </table>
-          </div>
-        </div>
-
-        ${
-          registration.admin_notes
-            ? `
-        <div class="section">
-          <h3>Admin Notes</h3>
-          <div class="field" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #17a2b8;">${registration.admin_notes}</div>
-        </div>
-        `
-            : ""
-        }
-      </body>
-      </html>
-    `;
-  };
-
   const handleSaveRegistration = async (updatedRegistration: Registration) => {
     try {
+      // Extract only the fields needed for update (exclude id, created_at, updated_at)
+      const { id, created_at, updated_at, ...registrationData } =
+        updatedRegistration;
+
       const result = await RegistrationService.updateFullRegistration(
         updatedRegistration.id,
-        {
-          status: updatedRegistration.status,
-          submission_date_time: updatedRegistration.submission_date_time,
-          form_token: updatedRegistration.form_token,
-          division: updatedRegistration.division,
-          team_name: updatedRegistration.team_name,
-          ustad_name: updatedRegistration.ustad_name,
-          ustad_email: updatedRegistration.ustad_email,
-          coach_name: updatedRegistration.coach_name,
-          coach_email: updatedRegistration.coach_email,
-          team_location: updatedRegistration.team_location,
-          player_order: updatedRegistration.player_order,
-          team_photo: updatedRegistration.team_photo,
-          player1_name: updatedRegistration.player1_name,
-          player1_singh_kaur: updatedRegistration.player1_singh_kaur,
-          player1_dob: updatedRegistration.player1_dob,
-          player1_dob_proof: updatedRegistration.player1_dob_proof,
-          player1_email: updatedRegistration.player1_email,
-          player1_phone_number: updatedRegistration.player1_phone_number,
-          player1_emergency_contact_name:
-            updatedRegistration.player1_emergency_contact_name,
-          player1_emergency_contact_phone:
-            updatedRegistration.player1_emergency_contact_phone,
-          player1_father_name: updatedRegistration.player1_father_name,
-          player1_mother_name: updatedRegistration.player1_mother_name,
-          player1_city: updatedRegistration.player1_city,
-          player1_gatka_experience:
-            updatedRegistration.player1_gatka_experience,
-          player2_name: updatedRegistration.player2_name,
-          player2_singh_kaur: updatedRegistration.player2_singh_kaur,
-          player2_dob: updatedRegistration.player2_dob,
-          player2_dob_proof: updatedRegistration.player2_dob_proof,
-          player2_email: updatedRegistration.player2_email,
-          player2_phone_number: updatedRegistration.player2_phone_number,
-          player2_emergency_contact_name:
-            updatedRegistration.player2_emergency_contact_name,
-          player2_emergency_contact_phone:
-            updatedRegistration.player2_emergency_contact_phone,
-          player2_father_name: updatedRegistration.player2_father_name,
-          player2_mother_name: updatedRegistration.player2_mother_name,
-          player2_city: updatedRegistration.player2_city,
-          player2_gatka_experience:
-            updatedRegistration.player2_gatka_experience,
-          player3_name: updatedRegistration.player3_name,
-          player3_singh_kaur: updatedRegistration.player3_singh_kaur,
-          player3_dob: updatedRegistration.player3_dob,
-          player3_dob_proof: updatedRegistration.player3_dob_proof,
-          player3_email: updatedRegistration.player3_email,
-          player3_phone_number: updatedRegistration.player3_phone_number,
-          player3_emergency_contact_name:
-            updatedRegistration.player3_emergency_contact_name,
-          player3_emergency_contact_phone:
-            updatedRegistration.player3_emergency_contact_phone,
-          player3_father_name: updatedRegistration.player3_father_name,
-          player3_mother_name: updatedRegistration.player3_mother_name,
-          player3_city: updatedRegistration.player3_city,
-          player3_gatka_experience:
-            updatedRegistration.player3_gatka_experience,
-          backup_player: updatedRegistration.backup_player,
-          backup_name: updatedRegistration.backup_name,
-          backup_singh_kaur: updatedRegistration.backup_singh_kaur,
-          backup_dob: updatedRegistration.backup_dob,
-          backup_dob_proof: updatedRegistration.backup_dob_proof,
-          backup_email: updatedRegistration.backup_email,
-          backup_phone_number: updatedRegistration.backup_phone_number,
-          backup_emergency_contact_name:
-            updatedRegistration.backup_emergency_contact_name,
-          backup_emergency_contact_phone:
-            updatedRegistration.backup_emergency_contact_phone,
-          backup_father_name: updatedRegistration.backup_father_name,
-          backup_mother_name: updatedRegistration.backup_mother_name,
-          backup_city: updatedRegistration.backup_city,
-          backup_gatka_experience: updatedRegistration.backup_gatka_experience,
-          admin_notes: updatedRegistration.admin_notes,
-        }
+        registrationData
       );
 
       if (result.error) {
@@ -1169,9 +782,9 @@ export default function RegistrationsPage() {
           value={registrations
             .filter((r) => r.status === "approved")
             .reduce((sum, r) => {
-              // Count actual players: 3 main players + 1 backup if exists
+              // Count actual players: 3 main players + 1 backup if backup_player is true
               let playerCount = 3; // player1, player2, player3
-              if (r.backup_player && r.backup_name) {
+              if (r.backup_player) {
                 playerCount += 1;
               }
               return sum + playerCount;
@@ -1181,9 +794,9 @@ export default function RegistrationsPage() {
           iconColor="text-blue-600"
           valueColor="text-2xl font-bold text-blue-600"
           secondaryValue={registrations.reduce((sum, r) => {
-            // Count actual players: 3 main players + 1 backup if exists
+            // Count actual players: 3 main players + 1 backup if backup_player is true
             let playerCount = 3; // player1, player2, player3
-            if (r.backup_player && r.backup_name) {
+            if (r.backup_player) {
               playerCount += 1;
             }
             return sum + playerCount;
@@ -1207,7 +820,7 @@ export default function RegistrationsPage() {
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by team name, token, location, or ustaad..."
+                  placeholder="Search by team name, token, location, or ustad..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
@@ -1296,7 +909,7 @@ export default function RegistrationsPage() {
                           </TableHead>
                           <TableHead className="w-36">Last Updated</TableHead>
                           <TableHead className="w-40">Team Name</TableHead>
-                          <TableHead className="w-40">Ustaad</TableHead>
+                          <TableHead className="w-40">Ustad</TableHead>
                           <TableHead className="w-36">Location</TableHead>
                           <TableHead className="w-32">Division</TableHead>
                           <TableHead className="w-36">Status</TableHead>
