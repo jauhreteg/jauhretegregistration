@@ -7,15 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   Search,
   FileText,
   CheckCircle,
   XCircle,
   Eye,
   HelpCircle,
-  Archive
+  Archive,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { RegistrationService } from "@/services/registrationService";

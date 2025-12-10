@@ -33,6 +33,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { FilePreview } from "@/components/FilePreview";
+import { FileUploadManager } from "@/components/FileUploadManager";
 import {
   Save,
   X,
@@ -667,6 +668,17 @@ function RegistrationDetailModal({
     });
   }, []);
 
+  // Handler for file arrays (team_photo, dob_proof fields)
+  const handleFileArrayChange = useCallback(
+    (fieldName: string, files: string[]) => {
+      setEditedRegistration((prev) => ({
+        ...prev,
+        [fieldName]: files,
+      }));
+    },
+    []
+  );
+
   // Wrapper function to provide all EditableField props
   const renderEditableField = useCallback(
     (props: {
@@ -707,28 +719,101 @@ function RegistrationDetailModal({
     ]
   );
 
-  const DocumentViewer = ({
+  const EditableDocumentViewer = ({
     documents,
     label,
+    fieldName,
+    fileType,
+    isEditing = false,
   }: {
     documents: string[] | null;
     label: string;
+    fieldName: string;
+    fileType:
+      | "team_photo"
+      | "player1_dob_proof"
+      | "player2_dob_proof"
+      | "player3_dob_proof"
+      | "backup_dob_proof";
+    isEditing?: boolean;
   }) => {
-    if (!documents || documents.length === 0) {
+    if (isEditing) {
       return (
-        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded">
-          <span className="text-sm text-red-600">
-            No {label.toLowerCase()} uploaded
-          </span>
+        <div className="mt-2">
+          <FileUploadManager
+            files={documents}
+            label={label}
+            fileType={
+              fileType as
+                | "team_photo"
+                | "player1_dob_proof"
+                | "player2_dob_proof"
+                | "player3_dob_proof"
+                | "backup_dob_proof"
+            }
+            registrationId={registration.id}
+            formToken={registration.form_token}
+            onFilesChange={(newFiles) => {
+              handleFileArrayChange(fieldName, newFiles);
+            }}
+          />
+          <div className="mt-2 flex gap-2">
+            <Button size="sm" onClick={() => saveField(fieldName)}>
+              <Check className="h-3 w-3 mr-2" />
+              Done
+            </Button>
+          </div>
         </div>
       );
     }
 
+    // Read-only view with edit button
     return (
-      <div className="mt-2 flex flex-wrap gap-6">
-        {documents.map((doc, index) => (
-          <FilePreview key={index} url={doc} index={index} label={label} />
-        ))}
+      <div className="mt-2">
+        <div className="group">
+          {!documents || documents.length === 0 ? (
+            <div className="p-3 bg-red-50 border border-red-200 rounded flex items-center justify-between">
+              <span className="text-sm text-red-600">
+                No {label.toLowerCase()} uploaded
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => startEditing(fieldName)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Edit2 className="h-3 w-3" />
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-gray-500">
+                  {documents.length} file{documents.length !== 1 ? "s" : ""}{" "}
+                  uploaded
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => startEditing(fieldName)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-6">
+                {documents.map((doc, index) => (
+                  <FilePreview
+                    key={index}
+                    url={doc}
+                    index={index}
+                    label={label}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   };
@@ -782,9 +867,12 @@ function RegistrationDetailModal({
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Team Photo</Label>
-                    <DocumentViewer
+                    <EditableDocumentViewer
                       documents={editedRegistration.team_photo}
                       label="Team Photo"
+                      fieldName="team_photo"
+                      fileType="team_photo"
+                      isEditing={editingFields.has("team_photo")}
                     />
                   </div>
                 </CardContent>
@@ -918,9 +1006,12 @@ function RegistrationDetailModal({
                       <Label className="text-sm font-medium">
                         Player 1 Date of Birth Proof
                       </Label>
-                      <DocumentViewer
+                      <EditableDocumentViewer
                         documents={editedRegistration.player1_dob_proof}
                         label="Player 1 DOB Document"
+                        fieldName="player1_dob_proof"
+                        fileType="player1_dob_proof"
+                        isEditing={editingFields.has("player1_dob_proof")}
                       />
                     </div>
                   )}
@@ -1013,9 +1104,12 @@ function RegistrationDetailModal({
                       <Label className="text-sm font-medium">
                         Player 2 Date of Birth Proof
                       </Label>
-                      <DocumentViewer
+                      <EditableDocumentViewer
                         documents={editedRegistration.player2_dob_proof}
                         label="Player 2 DOB Document"
+                        fieldName="player2_dob_proof"
+                        fileType="player2_dob_proof"
+                        isEditing={editingFields.has("player2_dob_proof")}
                       />
                     </div>
                   )}
@@ -1108,9 +1202,12 @@ function RegistrationDetailModal({
                       <Label className="text-sm font-medium">
                         Player 3 Date of Birth Proof
                       </Label>
-                      <DocumentViewer
+                      <EditableDocumentViewer
                         documents={editedRegistration.player3_dob_proof}
                         label="Player 3 DOB Document"
+                        fieldName="player3_dob_proof"
+                        fileType="player3_dob_proof"
+                        isEditing={editingFields.has("player3_dob_proof")}
                       />
                     </div>
                   )}
@@ -1223,9 +1320,12 @@ function RegistrationDetailModal({
                           <Label className="text-sm font-medium">
                             Backup Player Date of Birth Proof
                           </Label>
-                          <DocumentViewer
+                          <EditableDocumentViewer
                             documents={editedRegistration.backup_dob_proof}
                             label="Backup Player DOB Document"
+                            fieldName="backup_dob_proof"
+                            fileType="backup_dob_proof"
+                            isEditing={editingFields.has("backup_dob_proof")}
                           />
                         </div>
                       )}

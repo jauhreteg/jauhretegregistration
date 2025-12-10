@@ -5,13 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FilePreview } from "@/components/FilePreview";
 import { Upload, Trash2, Plus } from "lucide-react";
+import { uploadFile } from "@/utils/file-storage";
 import { supabase } from "@/lib/supabase";
 
 interface FileUploadManagerProps {
   files: string[] | null;
   label: string;
-  fileType: string;
+  fileType:
+    | "team_photo"
+    | "player1_dob_proof"
+    | "player2_dob_proof"
+    | "player3_dob_proof"
+    | "backup_dob_proof";
   registrationId: string;
+  formToken: string;
   onFilesChange: (files: string[]) => void;
 }
 
@@ -20,6 +27,7 @@ export function FileUploadManager({
   label,
   fileType,
   registrationId,
+  formToken,
   onFilesChange,
 }: FileUploadManagerProps) {
   const [isUploading, setIsUploading] = useState(false);
@@ -39,35 +47,15 @@ export function FileUploadManager({
 
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
-        const fileExtension = file.name.split(".").pop();
-        const fileName = `${registrationId}-${fileType}-${Date.now()}-${i}.${fileExtension}`;
-        const filePath = `${fileType}/${fileName}`;
 
-        // Upload to Supabase storage
-        const { data, error } = await supabase.storage
-          .from("file_uploads")
-          .upload(filePath, file);
+        // Use the existing file storage utility
+        const { url, error } = await uploadFile(file, fileType, formToken);
 
-        if (error) {
-          throw error;
+        if (error || !url) {
+          throw new Error(error || "Failed to upload file");
         }
 
-        // Get public URL
-        const { data: publicUrlData } = supabase.storage
-          .from("file_uploads")
-          .getPublicUrl(filePath);
-
-        uploadedFiles.push(publicUrlData.publicUrl);
-
-        // Update file_uploads table
-        await supabase.from("file_uploads").insert({
-          registration_id: registrationId,
-          file_type: fileType as any,
-          file_path: filePath,
-          file_name: file.name,
-          file_size: file.size,
-          mime_type: file.type,
-        });
+        uploadedFiles.push(url);
       }
 
       // Update the files array
@@ -86,28 +74,30 @@ export function FileUploadManager({
 
   const handleFileDelete = async (fileUrl: string, index: number) => {
     try {
-      // Extract file path from URL
-      const urlParts = fileUrl.split("/");
-      const fileName = urlParts[urlParts.length - 1];
-      const filePath = `${fileType}/${fileName}`;
+      // Extract file path from the public URL
+      // URL format: https://...supabase.co/storage/v1/object/public/jet-documents/path/to/file
+      const url = new URL(fileUrl);
+      const pathParts = url.pathname.split("/");
+      const bucketIndex = pathParts.indexOf("jet-documents");
+
+      if (bucketIndex === -1) {
+        throw new Error("Invalid file URL format");
+      }
+
+      // Get the file path relative to the bucket
+      const filePath = pathParts.slice(bucketIndex + 1).join("/");
 
       // Delete from Supabase storage
       const { error: storageError } = await supabase.storage
-        .from("file_uploads")
+        .from("jet-documents")
         .remove([filePath]);
 
       if (storageError) {
         console.error("Storage deletion error:", storageError);
+        // Don't throw error for storage deletion failure, continue with array update
       }
 
-      // Delete from file_uploads table
-      await supabase
-        .from("file_uploads")
-        .delete()
-        .eq("registration_id", registrationId)
-        .eq("file_path", filePath);
-
-      // Update the files array
+      // Update the files array (remove from local state)
       const currentFiles = files || [];
       const newFiles = currentFiles.filter((_, i) => i !== index);
       onFilesChange(newFiles);
