@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { Registration, StatusType } from "@/types/database";
+import {
+  Registration,
+  StatusType,
+  FIELD_DISPLAY_NAMES,
+} from "@/types/database";
 import { RegistrationService } from "@/services/registrationService";
 import { useUser } from "@/app/dashboard/layout";
 import { useSuccessNotifications } from "@/hooks/useSuccessNotifications";
@@ -24,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import {
   Card,
@@ -77,43 +82,57 @@ const ClickableStatusBadge = ({
     switch (status) {
       case "new submission":
         return {
-          className: "bg-blue-100 text-blue-800 border-blue-200",
+          className:
+            "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
           icon: <FileText className="h-3 w-3" />,
           label: "New Submission",
         };
       case "in review":
         return {
-          className: "bg-yellow-100 text-yellow-800 border-yellow-200",
+          className:
+            "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800",
           icon: <Eye className="h-3 w-3" />,
           label: "In Review",
         };
       case "information requested":
         return {
-          className: "bg-orange-100 text-orange-800 border-orange-200",
+          className:
+            "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800",
           icon: <HelpCircle className="h-3 w-3" />,
           label: "Info Requested",
         };
+      case "updated information":
+        return {
+          className:
+            "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800",
+          icon: <Edit2 className="h-3 w-3" />,
+          label: "Updated Info",
+        };
       case "approved":
         return {
-          className: "bg-green-100 text-green-800 border-green-200",
+          className:
+            "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800",
           icon: <CheckCircle className="h-3 w-3" />,
           label: "Approved",
         };
       case "denied":
         return {
-          className: "bg-red-100 text-red-800 border-red-200",
+          className:
+            "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800",
           icon: <XCircle className="h-3 w-3" />,
           label: "Denied",
         };
       case "dropped":
         return {
-          className: "bg-gray-100 text-gray-800 border-gray-200",
+          className:
+            "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-800",
           icon: <Archive className="h-3 w-3" />,
           label: "Dropped",
         };
       default:
         return {
-          className: "bg-blue-100 text-blue-800 border-blue-200",
+          className:
+            "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
           icon: <FileText className="h-3 w-3" />,
           label:
             String(status).charAt(0).toUpperCase() + String(status).slice(1),
@@ -126,6 +145,7 @@ const ClickableStatusBadge = ({
     "new submission",
     "in review",
     "information requested",
+    "updated information",
     "approved",
     "denied",
     "dropped",
@@ -264,6 +284,8 @@ const EditableField = React.memo(
     onChange,
     isSaving,
     dropdownOptions,
+    needsUpdate,
+    onNeedsUpdateChange,
   }: {
     fieldName: string;
     label: string;
@@ -279,6 +301,8 @@ const EditableField = React.memo(
     onChange: (value: string) => void;
     isSaving: boolean;
     dropdownOptions?: Array<{ value: string; label: string }>;
+    needsUpdate?: boolean;
+    onNeedsUpdateChange?: (needsUpdate: boolean) => void;
   }) => {
     if (disabled) {
       return (
@@ -381,9 +405,41 @@ const EditableField = React.memo(
 
     return (
       <div>
-        <Label className="text-sm font-medium">{label}</Label>
-        <div className="mt-1 flex items-center justify-between group">
-          <div className="flex-1 px-3 py-2 border rounded text-sm bg-gray-50">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <Label
+              className={`text-sm font-medium ${
+                needsUpdate ? "text-orange-600" : ""
+              }`}
+            >
+              {label}
+            </Label>
+            {needsUpdate && (
+              <span className="text-xs text-orange-500">(needs update)</span>
+            )}
+            {onNeedsUpdateChange && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={`h-5 px-1.5 text-xs ml-1 ${
+                  needsUpdate
+                    ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                    : "text-gray-500 hover:bg-gray-100"
+                }`}
+                onClick={() => onNeedsUpdateChange(!needsUpdate)}
+              >
+                {needsUpdate ? "Remove" : "Mark"}
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-between group">
+          <div
+            className={`flex-1 px-3 py-2 border rounded text-sm ${
+              needsUpdate ? "bg-orange-50 border-orange-200" : "bg-gray-50"
+            }`}
+          >
             {getDisplayValue()}
           </div>
           <Button
@@ -679,6 +735,49 @@ function RegistrationDetailModal({
     []
   );
 
+  // Handler for needs_update boolean fields
+  const handleNeedsUpdateChange = useCallback(
+    (fieldName: string, needsUpdate: boolean) => {
+      const needsUpdateFieldName = `${fieldName}_needs_update`;
+
+      setEditedRegistration((prev) => {
+        // Update the boolean field
+        const updatedReg = {
+          ...prev,
+          [needsUpdateFieldName]: needsUpdate,
+        };
+
+        // Update admin_notes requested_updates array
+        const currentAdminNotes = prev.admin_notes || {
+          internal_notes: null,
+          requested_updates: [],
+        };
+
+        let updatedRequestedFields = [...currentAdminNotes.requested_updates];
+
+        if (needsUpdate) {
+          // Add field if marking for update and not already in list
+          if (!updatedRequestedFields.includes(fieldName)) {
+            updatedRequestedFields.push(fieldName);
+          }
+        } else {
+          // Remove field if removing update requirement
+          updatedRequestedFields = updatedRequestedFields.filter(
+            (field) => field !== fieldName
+          );
+        }
+
+        updatedReg.admin_notes = {
+          ...currentAdminNotes,
+          requested_updates: updatedRequestedFields,
+        };
+
+        return updatedReg;
+      });
+    },
+    []
+  );
+
   // Wrapper function to provide all EditableField props
   const renderEditableField = useCallback(
     (props: {
@@ -694,6 +793,9 @@ function RegistrationDetailModal({
       const currentValue = editedRegistration[
         props.fieldName as keyof Registration
       ] as string;
+      const needsUpdateFieldName =
+        `${props.fieldName}_needs_update` as keyof Registration;
+      const needsUpdate = editedRegistration[needsUpdateFieldName] as boolean;
 
       return (
         <EditableField
@@ -705,6 +807,10 @@ function RegistrationDetailModal({
           onCancel={() => cancelEditing(props.fieldName)}
           onChange={(value) => handleFieldChange(props.fieldName, value)}
           isSaving={isSaving}
+          needsUpdate={needsUpdate}
+          onNeedsUpdateChange={(needsUpdate) =>
+            handleNeedsUpdateChange(props.fieldName, needsUpdate)
+          }
         />
       );
     },
@@ -715,6 +821,7 @@ function RegistrationDetailModal({
       saveField,
       cancelEditing,
       handleFieldChange,
+      handleNeedsUpdateChange,
       isSaving,
     ]
   );
@@ -737,6 +844,9 @@ function RegistrationDetailModal({
       | "backup_dob_proof";
     isEditing?: boolean;
   }) => {
+    const needsUpdateFieldName =
+      `${fieldName}_needs_update` as keyof Registration;
+    const needsUpdate = editedRegistration[needsUpdateFieldName] as boolean;
     if (isEditing) {
       return (
         <div className="mt-2">
@@ -767,13 +877,48 @@ function RegistrationDetailModal({
       );
     }
 
-    // Read-only view with edit button
+    // Read-only view with edit button and checkbox
     return (
       <div className="mt-2">
+        <div className="flex items-center gap-2 mb-1">
+          <Label
+            className={`text-sm font-medium ${
+              needsUpdate ? "text-orange-600" : ""
+            }`}
+          >
+            {label}
+          </Label>
+          {needsUpdate && (
+            <span className="text-xs text-orange-500">(needs update)</span>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className={`h-5 px-1.5 text-xs ml-1 ${
+              needsUpdate
+                ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                : "text-gray-500 hover:bg-gray-100"
+            }`}
+            onClick={() => handleNeedsUpdateChange(fieldName, !needsUpdate)}
+          >
+            {needsUpdate ? "Remove" : "Mark"}
+          </Button>
+        </div>
         <div className="group">
           {!documents || documents.length === 0 ? (
-            <div className="p-3 bg-red-50 border border-red-200 rounded flex items-center justify-between">
-              <span className="text-sm text-red-600">
+            <div
+              className={`p-3 border rounded flex items-center justify-between ${
+                needsUpdate
+                  ? "bg-orange-50 border-orange-200"
+                  : "bg-red-50 border-red-200"
+              }`}
+            >
+              <span
+                className={`text-sm ${
+                  needsUpdate ? "text-orange-600" : "text-red-600"
+                }`}
+              >
                 No {label.toLowerCase()} uploaded
               </span>
               <Button
@@ -801,7 +946,13 @@ function RegistrationDetailModal({
                   <Edit2 className="h-3 w-3" />
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-6">
+              <div
+                className={`flex flex-wrap gap-6 p-3 border rounded ${
+                  needsUpdate
+                    ? "bg-orange-50 border-orange-200"
+                    : "border-gray-200"
+                }`}
+              >
                 {documents.map((doc, index) => (
                   <FilePreview
                     key={index}
@@ -866,7 +1017,6 @@ function RegistrationDetailModal({
                     })}
                   </div>
                   <div>
-                    <Label className="text-sm font-medium">Team Photo</Label>
                     <EditableDocumentViewer
                       documents={editedRegistration.team_photo}
                       label="Team Photo"
@@ -1003,9 +1153,6 @@ function RegistrationDetailModal({
                   {(editedRegistration.division === "Junior Kaurs" ||
                     editedRegistration.division === "Junior Singhs") && (
                     <div>
-                      <Label className="text-sm font-medium">
-                        Player 1 Date of Birth Proof
-                      </Label>
                       <EditableDocumentViewer
                         documents={editedRegistration.player1_dob_proof}
                         label="Player 1 DOB Document"
@@ -1101,9 +1248,6 @@ function RegistrationDetailModal({
                   {(editedRegistration.division === "Junior Kaurs" ||
                     editedRegistration.division === "Junior Singhs") && (
                     <div>
-                      <Label className="text-sm font-medium">
-                        Player 2 Date of Birth Proof
-                      </Label>
                       <EditableDocumentViewer
                         documents={editedRegistration.player2_dob_proof}
                         label="Player 2 DOB Document"
@@ -1199,9 +1343,6 @@ function RegistrationDetailModal({
                   {(editedRegistration.division === "Junior Kaurs" ||
                     editedRegistration.division === "Junior Singhs") && (
                     <div>
-                      <Label className="text-sm font-medium">
-                        Player 3 Date of Birth Proof
-                      </Label>
                       <EditableDocumentViewer
                         documents={editedRegistration.player3_dob_proof}
                         label="Player 3 DOB Document"
@@ -1317,9 +1458,6 @@ function RegistrationDetailModal({
                       {(editedRegistration.division === "Junior Kaurs" ||
                         editedRegistration.division === "Junior Singhs") && (
                         <div>
-                          <Label className="text-sm font-medium">
-                            Backup Player Date of Birth Proof
-                          </Label>
                           <EditableDocumentViewer
                             documents={editedRegistration.backup_dob_proof}
                             label="Backup Player DOB Document"
@@ -1349,41 +1487,58 @@ function RegistrationDetailModal({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Form Token - Not Editable */}
-                  <div>
+                  <div className="flex items-center gap-2">
                     <Label className="text-sm font-medium text-gray-600">
-                      Form Token
+                      Form Token:
                     </Label>
-                    <div className="mt-1 px-3 py-2 bg-white border rounded text-sm font-mono">
+                    <span className="text-sm font-mono text-gray-900">
                       {registration.form_token}
-                    </div>
+                    </span>
                   </div>
 
                   {/* Submission Date - Not Editable */}
-                  <div>
+                  <div className="flex items-center gap-2">
                     <Label className="text-sm font-medium text-gray-600">
-                      Submission Date
+                      Submission Date:
                     </Label>
-                    <div className="mt-1 px-3 py-2 bg-white border rounded text-sm">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-400" />
-                        {formatDate(registration.submission_date_time)}
-                      </div>
+                    <div className="flex items-center gap-1 text-sm text-gray-900">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span>
+                        {new Date(
+                          registration.submission_date_time
+                        ).toLocaleDateString("en-US")}{" "}
+                        {new Date(
+                          registration.submission_date_time
+                        ).toLocaleTimeString("en-US", {
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </span>
                     </div>
                   </div>
 
                   {/* Updated Date - Not Editable */}
-                  <div>
+                  <div className="flex items-center gap-2">
                     <Label className="text-sm font-medium text-gray-600">
-                      Last Updated
+                      Last Updated:
                     </Label>
-                    <div className="mt-1 px-3 py-2 bg-white border rounded text-sm">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-400" />
-                        {formatDate(
+                    <div className="flex items-center gap-1 text-sm text-gray-900">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span>
+                        {new Date(
                           registration.updated_at ||
                             registration.submission_date_time
-                        )}
-                      </div>
+                        ).toLocaleDateString("en-US")}{" "}
+                        {new Date(
+                          registration.updated_at ||
+                            registration.submission_date_time
+                        ).toLocaleTimeString("en-US", {
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </span>
                     </div>
                   </div>
 
@@ -1424,16 +1579,75 @@ function RegistrationDetailModal({
                 <CardHeader>
                   <CardTitle className="text-base">Admin Notes</CardTitle>
                   <CardDescription className="text-sm">
-                    Internal notes for registration review
+                    Internal notes and requested updates
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Textarea
-                    value={editedRegistration.admin_notes || ""}
-                    onChange={(e) => updateField("admin_notes", e.target.value)}
-                    placeholder="Add notes about this registration..."
-                    className="min-h-[120px] resize-none"
-                  />
+                <CardContent className="space-y-4">
+                  {/* Internal Notes Box */}
+                  <div>
+                    <Label
+                      htmlFor="internal-notes"
+                      className="text-sm font-medium mb-2 block"
+                    >
+                      Internal Notes
+                    </Label>
+                    <Textarea
+                      id="internal-notes"
+                      value={
+                        editedRegistration.admin_notes?.internal_notes || ""
+                      }
+                      onChange={(e) => {
+                        const currentAdminNotes =
+                          editedRegistration.admin_notes || {
+                            internal_notes: null,
+                            requested_updates: [],
+                          };
+                        setEditedRegistration((prev) => ({
+                          ...prev,
+                          admin_notes: {
+                            ...currentAdminNotes,
+                            internal_notes: e.target.value || null,
+                          },
+                        }));
+                      }}
+                      placeholder="Internal notes for admin review (not visible to users)..."
+                      className="min-h-[100px] resize-none"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      These notes are for internal use only and will not be sent
+                      to the team.
+                    </p>
+                  </div>
+
+                  {/* Requested Updates Box */}
+                  <div>
+                    <Label
+                      htmlFor="requested-updates"
+                      className="text-sm font-medium mb-2 block"
+                    >
+                      Requested Updates
+                    </Label>
+                    <Textarea
+                      id="requested-updates"
+                      value={
+                        editedRegistration.admin_notes?.requested_updates
+                          ?.length
+                          ? editedRegistration.admin_notes.requested_updates
+                              .map(
+                                (field) => FIELD_DISPLAY_NAMES[field] || field
+                              )
+                              .join("\n")
+                          : ""
+                      }
+                      readOnly
+                      placeholder="Fields marked for update will appear here automatically..."
+                      className="min-h-[100px] resize-none bg-muted"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This list is automatically generated when you mark fields
+                      for update. This text will be sent to the team via email.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </div>

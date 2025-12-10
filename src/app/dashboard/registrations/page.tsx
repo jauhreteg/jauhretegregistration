@@ -47,6 +47,7 @@ import {
   Download,
   Eye,
   Edit,
+  Edit2,
   Copy,
   MoreHorizontal,
   Calendar,
@@ -123,6 +124,13 @@ const StatusBadge = ({ status }: { status: StatusType }) => {
             "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800",
           icon: <HelpCircle className="h-3 w-3" />,
           label: "Info Requested",
+        };
+      case "updated information":
+        return {
+          className:
+            "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800",
+          icon: <Edit2 className="h-3 w-3" />,
+          label: "Updated Info",
         };
       case "approved":
         return {
@@ -533,83 +541,13 @@ export default function RegistrationsPage() {
 
   const handleSaveRegistration = async (updatedRegistration: Registration) => {
     try {
+      // Extract only the fields needed for update (exclude id, created_at, updated_at)
+      const { id, created_at, updated_at, ...registrationData } =
+        updatedRegistration;
+
       const result = await RegistrationService.updateFullRegistration(
         updatedRegistration.id,
-        {
-          status: updatedRegistration.status,
-          submission_date_time: updatedRegistration.submission_date_time,
-          form_token: updatedRegistration.form_token,
-          division: updatedRegistration.division,
-          team_name: updatedRegistration.team_name,
-          ustad_name: updatedRegistration.ustad_name,
-          ustad_email: updatedRegistration.ustad_email,
-          coach_name: updatedRegistration.coach_name,
-          coach_email: updatedRegistration.coach_email,
-          team_location: updatedRegistration.team_location,
-          player_order: updatedRegistration.player_order,
-          team_photo: updatedRegistration.team_photo,
-          player1_name: updatedRegistration.player1_name,
-          player1_singh_kaur: updatedRegistration.player1_singh_kaur,
-          player1_dob: updatedRegistration.player1_dob,
-          player1_dob_proof: updatedRegistration.player1_dob_proof,
-          player1_email: updatedRegistration.player1_email,
-          player1_phone_number: updatedRegistration.player1_phone_number,
-          player1_emergency_contact_name:
-            updatedRegistration.player1_emergency_contact_name,
-          player1_emergency_contact_phone:
-            updatedRegistration.player1_emergency_contact_phone,
-          player1_father_name: updatedRegistration.player1_father_name,
-          player1_mother_name: updatedRegistration.player1_mother_name,
-          player1_city: updatedRegistration.player1_city,
-          player1_gatka_experience:
-            updatedRegistration.player1_gatka_experience,
-          player2_name: updatedRegistration.player2_name,
-          player2_singh_kaur: updatedRegistration.player2_singh_kaur,
-          player2_dob: updatedRegistration.player2_dob,
-          player2_dob_proof: updatedRegistration.player2_dob_proof,
-          player2_email: updatedRegistration.player2_email,
-          player2_phone_number: updatedRegistration.player2_phone_number,
-          player2_emergency_contact_name:
-            updatedRegistration.player2_emergency_contact_name,
-          player2_emergency_contact_phone:
-            updatedRegistration.player2_emergency_contact_phone,
-          player2_father_name: updatedRegistration.player2_father_name,
-          player2_mother_name: updatedRegistration.player2_mother_name,
-          player2_city: updatedRegistration.player2_city,
-          player2_gatka_experience:
-            updatedRegistration.player2_gatka_experience,
-          player3_name: updatedRegistration.player3_name,
-          player3_singh_kaur: updatedRegistration.player3_singh_kaur,
-          player3_dob: updatedRegistration.player3_dob,
-          player3_dob_proof: updatedRegistration.player3_dob_proof,
-          player3_email: updatedRegistration.player3_email,
-          player3_phone_number: updatedRegistration.player3_phone_number,
-          player3_emergency_contact_name:
-            updatedRegistration.player3_emergency_contact_name,
-          player3_emergency_contact_phone:
-            updatedRegistration.player3_emergency_contact_phone,
-          player3_father_name: updatedRegistration.player3_father_name,
-          player3_mother_name: updatedRegistration.player3_mother_name,
-          player3_city: updatedRegistration.player3_city,
-          player3_gatka_experience:
-            updatedRegistration.player3_gatka_experience,
-          backup_player: updatedRegistration.backup_player,
-          backup_name: updatedRegistration.backup_name,
-          backup_singh_kaur: updatedRegistration.backup_singh_kaur,
-          backup_dob: updatedRegistration.backup_dob,
-          backup_dob_proof: updatedRegistration.backup_dob_proof,
-          backup_email: updatedRegistration.backup_email,
-          backup_phone_number: updatedRegistration.backup_phone_number,
-          backup_emergency_contact_name:
-            updatedRegistration.backup_emergency_contact_name,
-          backup_emergency_contact_phone:
-            updatedRegistration.backup_emergency_contact_phone,
-          backup_father_name: updatedRegistration.backup_father_name,
-          backup_mother_name: updatedRegistration.backup_mother_name,
-          backup_city: updatedRegistration.backup_city,
-          backup_gatka_experience: updatedRegistration.backup_gatka_experience,
-          admin_notes: updatedRegistration.admin_notes,
-        }
+        registrationData
       );
 
       if (result.error) {
@@ -844,9 +782,9 @@ export default function RegistrationsPage() {
           value={registrations
             .filter((r) => r.status === "approved")
             .reduce((sum, r) => {
-              // Count actual players: 3 main players + 1 backup if exists
+              // Count actual players: 3 main players + 1 backup if backup_player is true
               let playerCount = 3; // player1, player2, player3
-              if (r.backup_player && r.backup_name) {
+              if (r.backup_player) {
                 playerCount += 1;
               }
               return sum + playerCount;
@@ -856,9 +794,9 @@ export default function RegistrationsPage() {
           iconColor="text-blue-600"
           valueColor="text-2xl font-bold text-blue-600"
           secondaryValue={registrations.reduce((sum, r) => {
-            // Count actual players: 3 main players + 1 backup if exists
+            // Count actual players: 3 main players + 1 backup if backup_player is true
             let playerCount = 3; // player1, player2, player3
-            if (r.backup_player && r.backup_name) {
+            if (r.backup_player) {
               playerCount += 1;
             }
             return sum + playerCount;
@@ -882,7 +820,7 @@ export default function RegistrationsPage() {
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by team name, token, location, or ustaad..."
+                  placeholder="Search by team name, token, location, or ustad..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
@@ -971,7 +909,7 @@ export default function RegistrationsPage() {
                           </TableHead>
                           <TableHead className="w-36">Last Updated</TableHead>
                           <TableHead className="w-40">Team Name</TableHead>
-                          <TableHead className="w-40">Ustaad</TableHead>
+                          <TableHead className="w-40">Ustad</TableHead>
                           <TableHead className="w-36">Location</TableHead>
                           <TableHead className="w-32">Division</TableHead>
                           <TableHead className="w-36">Status</TableHead>

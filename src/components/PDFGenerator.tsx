@@ -21,6 +21,11 @@ export class PDFGenerator {
             className: "status-information-requested",
             label: "Info Requested",
           };
+        case "updated information":
+          return {
+            className: "status-updated-information",
+            label: "Updated Info",
+          };
         case "approved":
           return {
             className: "status-approved",
@@ -70,6 +75,7 @@ export class PDFGenerator {
           .status-new-submission { background-color: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
           .status-in-review { background-color: #fef3c7; color: #a16207; border-color: #fde68a; }
           .status-information-requested { background-color: #fed7aa; color: #c2410c; border-color: #fdba74; }
+          .status-updated-information { background-color: #f3e8ff; color: #7c3aed; border-color: #e9d5ff; }
           .status-approved { background-color: #dcfce7; color: #15803d; border-color: #bbf7d0; }
           .status-denied { background-color: #fee2e2; color: #dc2626; border-color: #fecaca; }
           .status-dropped { background-color: #f3f4f6; color: #374151; border-color: #d1d5db; }

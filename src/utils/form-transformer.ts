@@ -272,6 +272,78 @@ export function transformFormDataToRegistration(
     backup_gatka_experience: hasBackupPlayer
       ? formData.backupGatkaExperience
       : null,
+
+    // User-Editable Field Tracking (all false for new registrations)
+    // Team Data fields
+    division_needs_update: false,
+    team_name_needs_update: false,
+    ustad_name_needs_update: false,
+    ustad_email_needs_update: false,
+    coach_name_needs_update: false,
+    coach_email_needs_update: false,
+    team_location_needs_update: false,
+    player_order_needs_update: false,
+    team_photo_needs_update: false,
+
+    // Player 1 Data fields
+    player1_name_needs_update: false,
+    player1_singh_kaur_needs_update: false,
+    player1_dob_needs_update: false,
+    player1_dob_proof_needs_update: false,
+    player1_email_needs_update: false,
+    player1_phone_number_needs_update: false,
+    player1_emergency_contact_name_needs_update: false,
+    player1_emergency_contact_phone_needs_update: false,
+    player1_father_name_needs_update: false,
+    player1_mother_name_needs_update: false,
+    player1_city_needs_update: false,
+    player1_gatka_experience_needs_update: false,
+
+    // Player 2 Data fields
+    player2_name_needs_update: false,
+    player2_singh_kaur_needs_update: false,
+    player2_dob_needs_update: false,
+    player2_dob_proof_needs_update: false,
+    player2_email_needs_update: false,
+    player2_phone_number_needs_update: false,
+    player2_emergency_contact_name_needs_update: false,
+    player2_emergency_contact_phone_needs_update: false,
+    player2_father_name_needs_update: false,
+    player2_mother_name_needs_update: false,
+    player2_city_needs_update: false,
+    player2_gatka_experience_needs_update: false,
+
+    // Player 3 Data fields
+    player3_name_needs_update: false,
+    player3_singh_kaur_needs_update: false,
+    player3_dob_needs_update: false,
+    player3_dob_proof_needs_update: false,
+    player3_email_needs_update: false,
+    player3_phone_number_needs_update: false,
+    player3_emergency_contact_name_needs_update: false,
+    player3_emergency_contact_phone_needs_update: false,
+    player3_father_name_needs_update: false,
+    player3_mother_name_needs_update: false,
+    player3_city_needs_update: false,
+    player3_gatka_experience_needs_update: false,
+
+    // Backup Player Data fields
+    backup_player_needs_update: false,
+    backup_name_needs_update: false,
+    backup_singh_kaur_needs_update: false,
+    backup_dob_needs_update: false,
+    backup_dob_proof_needs_update: false,
+    backup_email_needs_update: false,
+    backup_phone_number_needs_update: false,
+    backup_emergency_contact_name_needs_update: false,
+    backup_emergency_contact_phone_needs_update: false,
+    backup_father_name_needs_update: false,
+    backup_mother_name_needs_update: false,
+    backup_city_needs_update: false,
+    backup_gatka_experience_needs_update: false,
+
+    // Admin Review
+    admin_notes: null,
   };
 
   return registration;

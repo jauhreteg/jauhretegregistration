@@ -1,10 +1,80 @@
 // Database types that match our Supabase schema
 // These types ensure type safety when working with the database
 
+// Field name mapping for user-friendly display
+export const FIELD_DISPLAY_NAMES: Record<string, string> = {
+  // Team fields
+  team_name: "Team Name",
+  ustad_name: "Ustad Name",
+  ustad_email: "Ustad Email",
+  coach_name: "Senior Gatkai Coach",
+  coach_email: "Senior Gatkai Coach Email",
+  team_location: "Team Location",
+  player_order: "Player Order",
+  team_photo: "Team Photos",
+
+  // Player 1 fields
+  player1_name: "Name (Player 1)",
+  player1_singh_kaur: "Singh/Kaur (Player 1)",
+  player1_dob: "Date of Birth (Player 1)",
+  player1_dob_proof: "DOB Proof (Player 1)",
+  player1_email: "Email (Player 1)",
+  player1_phone_number: "Phone (Player 1)",
+  player1_emergency_contact_name: "Emergency Contact Name (Player 1)",
+  player1_emergency_contact_phone: "Emergency Contact Phone (Player 1)",
+  player1_father_name: "Father Name (Player 1)",
+  player1_mother_name: "Mother Name (Player 1)",
+  player1_city: "City (Player 1)",
+  player1_gatka_experience: "Gatka Experience (Player 1)",
+
+  // Player 2 fields
+  player2_name: "Name (Player 2)",
+  player2_singh_kaur: "Singh/Kaur (Player 2)",
+  player2_dob: "Date of Birth (Player 2)",
+  player2_dob_proof: "DOB Proof (Player 2)",
+  player2_email: "Email (Player 2)",
+  player2_phone_number: "Phone (Player 2)",
+  player2_emergency_contact_name: "Emergency Contact Name (Player 2)",
+  player2_emergency_contact_phone: "Emergency Contact Phone (Player 2)",
+  player2_father_name: "Father Name (Player 2)",
+  player2_mother_name: "Mother Name (Player 2)",
+  player2_city: "City (Player 2)",
+  player2_gatka_experience: "Gatka Experience (Player 2)",
+
+  // Player 3 fields
+  player3_name: "Name (Player 3)",
+  player3_singh_kaur: "Singh/Kaur (Player 3)",
+  player3_dob: "Date of Birth (Player 3)",
+  player3_dob_proof: "DOB Proof (Player 3)",
+  player3_email: "Email (Player 3)",
+  player3_phone_number: "Phone (Player 3)",
+  player3_emergency_contact_name: "Emergency Contact Name (Player 3)",
+  player3_emergency_contact_phone: "Emergency Contact Phone (Player 3)",
+  player3_father_name: "Father Name (Player 3)",
+  player3_mother_name: "Mother Name (Player 3)",
+  player3_city: "City (Player 3)",
+  player3_gatka_experience: "Gatka Experience (Player 3)",
+
+  // Backup player fields
+  backup_player: "Has Backup Player",
+  backup_name: "Name (Backup Player)",
+  backup_singh_kaur: "Singh/Kaur (Backup Player)",
+  backup_dob: "Date of Birth (Backup Player)",
+  backup_dob_proof: "DOB Proof (Backup Player)",
+  backup_phone_number: "Phone (Backup Player)",
+  backup_emergency_contact_name: "Emergency Contact Name (Backup Player)",
+  backup_emergency_contact_phone: "Emergency Contact Phone (Backup Player)",
+  backup_father_name: "Father Name (Backup Player)",
+  backup_mother_name: "Mother Name (Backup Player)",
+  backup_city: "City (Backup Player)",
+  backup_gatka_experience: "Gatka Experience (Backup Player)",
+};
+
 export type StatusType =
   | "new submission"
   | "in review"
   | "information requested"
+  | "updated information"
   | "approved"
   | "denied"
   | "dropped";
@@ -91,8 +161,80 @@ export interface Registration {
   backup_city: string | null;
   backup_gatka_experience: string | null;
 
+  // User-Editable Field Tracking (for admin to mark what needs user updates)
+  // Team Data fields
+  division_needs_update: boolean;
+  team_name_needs_update: boolean;
+  ustad_name_needs_update: boolean;
+  ustad_email_needs_update: boolean;
+  coach_name_needs_update: boolean;
+  coach_email_needs_update: boolean;
+  team_location_needs_update: boolean;
+  player_order_needs_update: boolean;
+  team_photo_needs_update: boolean;
+
+  // Player 1 Data fields
+  player1_name_needs_update: boolean;
+  player1_singh_kaur_needs_update: boolean;
+  player1_dob_needs_update: boolean;
+  player1_dob_proof_needs_update: boolean;
+  player1_email_needs_update: boolean;
+  player1_phone_number_needs_update: boolean;
+  player1_emergency_contact_name_needs_update: boolean;
+  player1_emergency_contact_phone_needs_update: boolean;
+  player1_father_name_needs_update: boolean;
+  player1_mother_name_needs_update: boolean;
+  player1_city_needs_update: boolean;
+  player1_gatka_experience_needs_update: boolean;
+
+  // Player 2 Data fields
+  player2_name_needs_update: boolean;
+  player2_singh_kaur_needs_update: boolean;
+  player2_dob_needs_update: boolean;
+  player2_dob_proof_needs_update: boolean;
+  player2_email_needs_update: boolean;
+  player2_phone_number_needs_update: boolean;
+  player2_emergency_contact_name_needs_update: boolean;
+  player2_emergency_contact_phone_needs_update: boolean;
+  player2_father_name_needs_update: boolean;
+  player2_mother_name_needs_update: boolean;
+  player2_city_needs_update: boolean;
+  player2_gatka_experience_needs_update: boolean;
+
+  // Player 3 Data fields
+  player3_name_needs_update: boolean;
+  player3_singh_kaur_needs_update: boolean;
+  player3_dob_needs_update: boolean;
+  player3_dob_proof_needs_update: boolean;
+  player3_email_needs_update: boolean;
+  player3_phone_number_needs_update: boolean;
+  player3_emergency_contact_name_needs_update: boolean;
+  player3_emergency_contact_phone_needs_update: boolean;
+  player3_father_name_needs_update: boolean;
+  player3_mother_name_needs_update: boolean;
+  player3_city_needs_update: boolean;
+  player3_gatka_experience_needs_update: boolean;
+
+  // Backup Player Data fields
+  backup_player_needs_update: boolean;
+  backup_name_needs_update: boolean;
+  backup_singh_kaur_needs_update: boolean;
+  backup_dob_needs_update: boolean;
+  backup_dob_proof_needs_update: boolean;
+  backup_email_needs_update: boolean;
+  backup_phone_number_needs_update: boolean;
+  backup_emergency_contact_name_needs_update: boolean;
+  backup_emergency_contact_phone_needs_update: boolean;
+  backup_father_name_needs_update: boolean;
+  backup_mother_name_needs_update: boolean;
+  backup_city_needs_update: boolean;
+  backup_gatka_experience_needs_update: boolean;
+
   // Admin Review
-  admin_notes: string | null;
+  admin_notes: {
+    internal_notes: string | null;
+    requested_updates: string[];
+  } | null;
 
   // Metadata
   created_at: string;
@@ -138,7 +280,10 @@ export interface RegistrationSummary {
   team_location: string;
   player_order: string;
   backup_player: boolean;
-  admin_notes: string | null;
+  admin_notes: {
+    internal_notes: string | null;
+    requested_updates: string[];
+  } | null;
   team_photos_count: number;
   dob_proofs_count: number;
   created_at: string;

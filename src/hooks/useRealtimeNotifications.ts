@@ -94,19 +94,26 @@ export function useRealtimeNotifications(
           const updatedRegistration = payload.new as Registration;
           const oldRegistration = payload.old as Registration;
 
-          // Check if this update was made by an admin session
+          // Check if this update was made by a user or admin session
           const adminUpdateMarker =
             typeof window !== "undefined"
               ? localStorage.getItem("admin_update_session")
               : null;
+          const userUpdateMarker =
+            typeof window !== "undefined"
+              ? localStorage.getItem("user_update_session")
+              : null;
+
           const isRecentAdminUpdate =
             adminUpdateMarker &&
-            Date.now() - parseInt(adminUpdateMarker) < 3000; // 3 second window
+            Date.now() - parseInt(adminUpdateMarker) < 5000; // 5 second window
 
-          const isAdminUpdate =
-            isRecentAdminUpdate ||
-            (typeof window !== "undefined" &&
-              window.location.pathname.includes("/dashboard"));
+          const isRecentUserUpdate =
+            userUpdateMarker && Date.now() - parseInt(userUpdateMarker) < 5000; // 5 second window
+
+          // Determine update source based on explicit markers only
+          // User updates take precedence since they're more specific
+          const isAdminUpdate = isRecentAdminUpdate && !isRecentUserUpdate;
 
           // Get admin identity if this was an admin update
           let adminUser: string | undefined;
