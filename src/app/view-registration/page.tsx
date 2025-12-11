@@ -25,9 +25,12 @@ import {
   Registration,
   StatusType,
   FIELD_DISPLAY_NAMES,
+  Ustad,
 } from "@/types/database";
 import { FilePreview } from "@/components/FilePreview";
 import { FileUploadManager } from "@/components/FileUploadManager";
+import UstadManager from "@/components/UstadManager";
+import { formatUstadsDisplay, createEmptyUstad } from "@/utils/ustads-utils";
 import { useSuccessNotifications } from "@/hooks/useSuccessNotifications";
 import { ToastProvider } from "@/components/ui/toast-provider";
 
@@ -539,6 +542,15 @@ function ViewRegistrationPageContent() {
     }
   };
 
+  const handleUstadsChange = (ustads: Ustad[]) => {
+    if (!editedRegistration) return;
+
+    setEditedRegistration((prev) => ({
+      ...prev!,
+      ustads,
+    }));
+  };
+
   const handleFileArrayChange = (fieldName: string, files: string[]) => {
     if (!editedRegistration) return;
 
@@ -726,36 +738,67 @@ function ViewRegistrationPageContent() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div className="space-y-4">
+                      {/* Ustads Section */}
+                      <div className="col-span-full">
+                        {registration.ustads_needs_update && (
+                          <div className="mb-2 p-2 bg-orange-50 border border-orange-200 rounded">
+                            <span className="text-sm text-orange-800 font-medium">
+                              Please review and update your ustads information
+                            </span>
+                          </div>
+                        )}
+                        {isEditing ? (
+                          <UstadManager
+                            ustads={
+                              editedRegistration?.ustads || [createEmptyUstad()]
+                            }
+                            onUstadsChange={(ustads: Ustad[]) =>
+                              handleUstadsChange(ustads)
+                            }
+                            validationErrors={{}}
+                            onValidationError={() => {}}
+                            isRequired={() => false}
+                          />
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {registration.ustads &&
+                            registration.ustads.length > 0 ? (
+                              registration.ustads
+                                .map((ustad, index) => [
+                                  <div key={`ustad-${index}-name`}>
+                                    <span className="text-sm font-medium text-gray-700">
+                                      Ustad {index + 1} Name
+                                    </span>
+                                    <div className="text-gray-900 mt-1">
+                                      {ustad.name || "N/A"}
+                                    </div>
+                                  </div>,
+                                  <div key={`ustad-${index}-email`}>
+                                    <span className="text-sm font-medium text-gray-700">
+                                      Ustad {index + 1} Email
+                                    </span>
+                                    <div className="text-gray-900 mt-1">
+                                      {ustad.email || "N/A"}
+                                    </div>
+                                  </div>,
+                                ])
+                                .flat()
+                            ) : (
+                              <div className="col-span-full">
+                                <span className="text-sm font-medium text-gray-700">
+                                  Ustads
+                                </span>
+                                <div className="text-gray-500 italic mt-1">
+                                  No ustads assigned
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <UserEditableField
-                        fieldName="ustad_name"
-                        label="Ustad Name"
-                        value={
-                          isEditing
-                            ? editedRegistration?.ustad_name || ""
-                            : registration.ustad_name
-                        }
-                        isEditing={isEditing}
-                        needsUpdate={registration.ustad_name_needs_update}
-                        onChange={(value) =>
-                          handleFieldChange("ustad_name", value)
-                        }
-                      />
-                      <UserEditableField
-                        fieldName="ustad_email"
-                        label="Ustad Email"
-                        value={
-                          isEditing
-                            ? editedRegistration?.ustad_email || ""
-                            : registration.ustad_email
-                        }
-                        isEditing={isEditing}
-                        needsUpdate={registration.ustad_email_needs_update}
-                        type="email"
-                        onChange={(value) =>
-                          handleFieldChange("ustad_email", value)
-                        }
-                      />
                       <UserEditableField
                         fieldName="coach_name"
                         label="Senior Gatkai Coach"
@@ -1794,6 +1837,14 @@ function ViewRegistrationPageContent() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-600">
+                            <p>
+                              <strong>Note:</strong> You can only edit the
+                              fields listed below. Click "Edit Registration" to
+                              make changes, then save your updates.
+                            </p>
+                          </div>
+
                           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <h4 className="font-semibold text-blue-900 mb-2">
                               Information Update Required
@@ -1815,19 +1866,18 @@ function ViewRegistrationPageContent() {
                                 currentRegistration.admin_notes
                                   ?.requested_updates || [];
 
-                              // Define field order groups
+                              // Define field order to match view-registration page structure
                               const fieldOrder = [
-                                // Team fields
+                                // Team Information (as it appears on view-registration)
                                 "team_name",
+                                "ustads",
+                                "coach_name",
+                                "coach_email",
                                 "team_location",
                                 "player_order",
                                 "team_photo",
-                                "ustad_name",
-                                "ustad_email",
-                                "coach_name",
-                                "coach_email",
 
-                                // Player 1 fields
+                                // Player 1 Information
                                 "player1_name",
                                 "player1_singh_kaur",
                                 "player1_dob",
@@ -1914,13 +1964,17 @@ function ViewRegistrationPageContent() {
                             })()}
                           </div>
 
-                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-600">
-                            <p>
-                              <strong>Note:</strong> You can only edit the
-                              fields listed above. Click "Edit Registration" to
-                              make changes, then save your updates.
-                            </p>
-                          </div>
+                          {/* Public Notes Section */}
+                          {registration.admin_notes?.public_notes && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                              <h3 className="text-sm font-semibold text-blue-900 mb-2">
+                                Notes
+                              </h3>
+                              <div className="text-sm text-blue-800 whitespace-pre-wrap">
+                                {registration.admin_notes.public_notes}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -1990,7 +2044,6 @@ function ViewRegistrationPageContent() {
                 </Button>
               </div>
             </form>
-            div{" "}
           </CardContent>
         </Card>
       </div>

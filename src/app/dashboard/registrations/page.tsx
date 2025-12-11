@@ -69,6 +69,12 @@ import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import { useToast } from "@/components/ui/toast-provider";
 import RegistrationDetailModal from "@/components/RegistrationDetailModal";
 import { PDFGenerator } from "@/components/PDFGenerator";
+import {
+  formatUstadsDisplay,
+  formatUstadsTooltip,
+  formatUstadsForPDF,
+  formatUstadsForCSV,
+} from "@/utils/ustads-utils";
 
 // Using Registration interface from database types
 
@@ -211,8 +217,7 @@ export default function RegistrationsPage() {
     { key: "division", label: "Division" },
     { key: "team_location", label: "Team Location" },
     { key: "submission_date_time", label: "Submission Date" },
-    { key: "ustad_name", label: "Ustad Name" },
-    { key: "ustad_email", label: "Ustad Email" },
+    { key: "ustads", label: "Ustads" },
     { key: "coach_name", label: "Senior Gatkai Coach Name" },
     { key: "coach_email", label: "Senior Gatkai Coach Email" },
     { key: "player1_name", label: "Player 1 Name" },
@@ -393,7 +398,7 @@ export default function RegistrationsPage() {
       "division",
       "team_location",
       "submission_date_time",
-      "ustad_name",
+      "ustads",
       "coach_name",
       "player1_name",
       "player1_singh_kaur",
@@ -441,6 +446,37 @@ export default function RegistrationsPage() {
     data.forEach((row) => {
       const csvRow = columns.map((col) => {
         let value = row[col as keyof Registration];
+
+        // Handle ustads field specially
+        if (col === "ustads") {
+          const ustadsArray = value as typeof row.ustads;
+          value = formatUstadsForCSV(ustadsArray);
+        }
+
+        // Handle admin_notes field specially
+        if (col === "admin_notes") {
+          const adminNotes = value as typeof row.admin_notes;
+          if (adminNotes) {
+            const parts = [];
+            if (adminNotes.internal_notes) {
+              parts.push(`Internal: ${adminNotes.internal_notes}`);
+            }
+            if (adminNotes.public_notes) {
+              parts.push(`Public: ${adminNotes.public_notes}`);
+            }
+            if (
+              adminNotes.requested_updates &&
+              adminNotes.requested_updates.length > 0
+            ) {
+              parts.push(
+                `Requested Updates: ${adminNotes.requested_updates.join("; ")}`
+              );
+            }
+            value = parts.length > 0 ? parts.join(" | ") : "None";
+          } else {
+            value = "None";
+          }
+        }
 
         // Handle dates
         if (col.includes("date") || col.includes("_at")) {
@@ -583,10 +619,12 @@ export default function RegistrationsPage() {
           registration.team_location
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          (registration.ustad_name &&
-            registration.ustad_name
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()));
+          (registration.ustads &&
+            registration.ustads.some(
+              (ustad) =>
+                ustad.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                ustad.email.toLowerCase().includes(searchTerm.toLowerCase())
+            ));
 
         const matchesStatus =
           statusFilter === "all" || registration.status === statusFilter;
@@ -820,7 +858,7 @@ export default function RegistrationsPage() {
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by team name, token, location, or ustad..."
+                  placeholder="Search by team name, token, location, or ustad name/email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
@@ -959,11 +997,29 @@ export default function RegistrationsPage() {
                               />
                             </TableCell>
                             <TableCell className="w-48 max-w-48">
-                              {registration.ustad_name ? (
-                                <TruncatedText
-                                  text={registration.ustad_name}
-                                  maxLength={20}
-                                />
+                              {registration.ustads &&
+                              registration.ustads.length > 0 ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="cursor-help">
+                                        <TruncatedText
+                                          text={formatUstadsDisplay(
+                                            registration.ustads
+                                          )}
+                                          maxLength={20}
+                                        />
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <div className="whitespace-pre-line">
+                                        {registration.ustads
+                                          .map((ustad) => ustad.name)
+                                          .join(", ")}
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               ) : (
                                 <span className="text-muted-foreground italic">
                                   None

@@ -33,6 +33,7 @@ import {
   Archive,
 } from "lucide-react";
 import { Registration } from "@/types/database";
+import { formatUstadsDisplay } from "@/utils/ustads-utils";
 
 interface RecentRegistrationsProps {
   data: Registration[];
@@ -228,7 +229,7 @@ export function RecentRegistrations({
                 </TableCell>
                 <TableCell>
                   <TruncatedText
-                    text={registration.ustad_name}
+                    text={formatUstadsDisplay(registration.ustads)}
                     maxLength={20}
                   />
                 </TableCell>

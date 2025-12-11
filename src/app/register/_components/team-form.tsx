@@ -11,13 +11,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileUpload } from "@/components/file-upload";
+import UstadManager from "@/components/UstadManager";
 
 import { TeamData } from "@/types/form-types";
+import { Ustad } from "@/types/database";
 
 interface TeamFormProps {
   teamData: TeamData;
   validationErrors: Record<string, string | undefined>;
-  onFieldChange: (field: string, value: string | File | File[] | null) => void;
+  onFieldChange: (
+    field: string,
+    value: string | File | File[] | Ustad[] | null
+  ) => void;
   onValidationError: (field: string, error: string | undefined) => void;
   isRequired?: (fieldName: string) => boolean;
   playerNames: {
@@ -80,7 +85,7 @@ export default function TeamForm({
   // Enhanced field change handler
   const handleFieldChange = (
     field: keyof TeamData,
-    value: string | File | File[] | null
+    value: string | File | File[] | Ustad[] | null
   ) => {
     onFieldChange(field, value);
 
@@ -113,55 +118,22 @@ export default function TeamForm({
 
       {/* Team Leadership Section */}
       <div className="space-y-4">
-        {
-          /* Ustad Information */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="ustadName">
-                Ustad Name{" "}
-                <RequiredAsterisk
-                  fieldName="ustadName"
-                  isRequired={isRequired}
-                />
-              </Label>
-              <Input
-                id="ustadName"
-                value={teamData.ustadName}
-                onChange={(e) => handleFieldChange("ustadName", e.target.value)}
-                placeholder="Enter ustad name"
-                className={`h-10 ${
-                  false
-                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
-                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
-                }`}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="ustadEmail">
-                Ustad Email{" "}
-                <RequiredAsterisk
-                  fieldName="ustadEmail"
-                  isRequired={isRequired}
-                />
-              </Label>
-              <Input
-                id="ustadEmail"
-                type="email"
-                value={teamData.ustadEmail || ""}
-                onChange={(e) =>
-                  handleFieldChange("ustadEmail", e.target.value)
-                }
-                placeholder="ustad@example.com"
-                className={`h-10 ${
-                  false
-                    ? "border-gray-600 bg-gray-800 text-white focus:border-gray-400"
-                    : "border-gray-300 bg-white text-gray-900 focus:border-gray-500"
-                }`}
-              />
-            </div>
-          </div>
-        }
+        {/* Ustads Information */}
+        <UstadManager
+          ustads={teamData.ustads}
+          onUstadsChange={(ustads: Ustad[]) =>
+            handleFieldChange("ustads", ustads)
+          }
+          validationErrors={
+            Object.fromEntries(
+              Object.entries(validationErrors).filter(
+                ([_, value]) => value !== undefined
+              )
+            ) as Record<string, string>
+          }
+          onValidationError={onValidationError}
+          isRequired={isRequired}
+        />
 
         {/* Senior Gatkai Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

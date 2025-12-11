@@ -16,6 +16,7 @@ import { useFormValidation } from "@/hooks/use-form-validation";
 import { useFormNavigation } from "@/hooks/use-form-navigation";
 import { submitRegistration } from "@/lib/database-api";
 import { testSupabaseConnection } from "@/lib/supabase";
+import { Ustad } from "@/types/database";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -53,7 +54,7 @@ export default function RegisterPage() {
   // Real-time field validation and updates
   const handleFieldChange = (
     field: string,
-    value: string | File | File[] | null | boolean
+    value: string | File | File[] | Ustad[] | null | boolean
   ) => {
     updateField(field as any, value);
 
