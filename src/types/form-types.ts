@@ -1,11 +1,12 @@
+import { Ustad } from "@/types/database";
+
 export type FormData = {
   // Team Information
   teamName: string;
   city: string;
   state: string;
   country: string;
-  ustadName: string;
-  ustadEmail: string;
+  ustads: Ustad[];
   seniorGatkaiName: string;
   seniorGatkaiEmail: string;
   division: string;
@@ -150,8 +151,7 @@ export interface TeamData {
   city: string;
   state: string;
   country: string;
-  ustadName: string;
-  ustadEmail: string;
+  ustads: Ustad[];
   seniorGatkaiName: string;
   seniorGatkaiEmail: string;
   division: string;

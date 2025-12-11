@@ -204,8 +204,8 @@ export function transformFormDataToRegistration(
     // Team data
     division: formData.division as DivisionType,
     team_name: formData.teamName,
-    ustad_name: formData.ustadName,
-    ustad_email: formData.ustadEmail || null,
+    ustads:
+      formData.ustads && formData.ustads.length > 0 ? formData.ustads : null,
     coach_name: formData.seniorGatkaiName,
     coach_email: formData.seniorGatkaiEmail || null,
     team_location: teamLocation,
@@ -277,8 +277,7 @@ export function transformFormDataToRegistration(
     // Team Data fields
     division_needs_update: false,
     team_name_needs_update: false,
-    ustad_name_needs_update: false,
-    ustad_email_needs_update: false,
+    ustads_needs_update: false,
     coach_name_needs_update: false,
     coach_email_needs_update: false,
     team_location_needs_update: false,

@@ -1,12 +1,17 @@
 // Database types that match our Supabase schema
 // These types ensure type safety when working with the database
 
+// Ustad interface for JSONB ustads field
+export interface Ustad {
+  name: string;
+  email: string;
+}
+
 // Field name mapping for user-friendly display
 export const FIELD_DISPLAY_NAMES: Record<string, string> = {
   // Team fields
   team_name: "Team Name",
-  ustad_name: "Ustad Name",
-  ustad_email: "Ustad Email",
+  ustads: "Ustads",
   coach_name: "Senior Gatkai Coach",
   coach_email: "Senior Gatkai Coach Email",
   team_location: "Team Location",
@@ -96,8 +101,7 @@ export interface Registration {
   // Team Data
   division: DivisionType;
   team_name: string;
-  ustad_name: string;
-  ustad_email: string | null;
+  ustads: Ustad[] | null;
   coach_name: string;
   coach_email: string | null;
   team_location: string;
@@ -165,8 +169,7 @@ export interface Registration {
   // Team Data fields
   division_needs_update: boolean;
   team_name_needs_update: boolean;
-  ustad_name_needs_update: boolean;
-  ustad_email_needs_update: boolean;
+  ustads_needs_update: boolean;
   coach_name_needs_update: boolean;
   coach_email_needs_update: boolean;
   team_location_needs_update: boolean;
@@ -233,6 +236,7 @@ export interface Registration {
   // Admin Review
   admin_notes: {
     internal_notes: string | null;
+    public_notes: string | null;
     requested_updates: string[];
   } | null;
 
@@ -273,8 +277,7 @@ export interface RegistrationSummary {
   submission_date_time: string;
   division: DivisionType;
   team_name: string;
-  ustad_name: string;
-  ustad_email: string;
+  ustads: Ustad[] | null;
   coach_name: string;
   coach_email: string;
   team_location: string;

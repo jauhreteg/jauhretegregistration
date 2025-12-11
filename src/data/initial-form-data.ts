@@ -1,4 +1,5 @@
 import { FormData } from "@/types/form-types";
+import { createEmptyUstad } from "@/utils/ustads-utils";
 
 // Initial form data configuration
 export const getInitialFormData = (): FormData => ({
@@ -6,8 +7,7 @@ export const getInitialFormData = (): FormData => ({
   city: "",
   state: "",
   country: "",
-  ustadName: "",
-  ustadEmail: "",
+  ustads: [createEmptyUstad()],
   seniorGatkaiName: "",
   seniorGatkaiEmail: "",
   division: "",

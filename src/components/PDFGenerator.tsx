@@ -1,8 +1,85 @@
 "use client";
 
-import { Registration, StatusType } from "@/types/database";
+import {
+  Registration,
+  StatusType,
+  FIELD_DISPLAY_NAMES,
+} from "@/types/database";
+import { formatUstadsForPDF } from "@/utils/ustads-utils";
 
 export class PDFGenerator {
+  private static getRequestedUpdates(registration: Registration): string[] {
+    const requestedFields: string[] = [];
+
+    // Check all fields that have a corresponding _needs_update field
+    const fieldsToCheck = [
+      "team_name",
+      "ustads",
+      "coach_name",
+      "coach_email",
+      "team_location",
+      "player_order",
+      "team_photo",
+      "player1_name",
+      "player1_singh_kaur",
+      "player1_dob",
+      "player1_dob_proof",
+      "player1_email",
+      "player1_phone_number",
+      "player1_emergency_contact_name",
+      "player1_emergency_contact_phone",
+      "player1_father_name",
+      "player1_mother_name",
+      "player1_city",
+      "player1_gatka_experience",
+      "player2_name",
+      "player2_singh_kaur",
+      "player2_dob",
+      "player2_dob_proof",
+      "player2_email",
+      "player2_phone_number",
+      "player2_emergency_contact_name",
+      "player2_emergency_contact_phone",
+      "player2_father_name",
+      "player2_mother_name",
+      "player2_city",
+      "player2_gatka_experience",
+      "player3_name",
+      "player3_singh_kaur",
+      "player3_dob",
+      "player3_dob_proof",
+      "player3_email",
+      "player3_phone_number",
+      "player3_emergency_contact_name",
+      "player3_emergency_contact_phone",
+      "player3_father_name",
+      "player3_mother_name",
+      "player3_city",
+      "player3_gatka_experience",
+      "backup_player",
+      "backup_name",
+      "backup_singh_kaur",
+      "backup_dob",
+      "backup_dob_proof",
+      "backup_phone_number",
+      "backup_emergency_contact_name",
+      "backup_emergency_contact_phone",
+      "backup_father_name",
+      "backup_mother_name",
+      "backup_city",
+      "backup_gatka_experience",
+    ];
+
+    fieldsToCheck.forEach((field) => {
+      const needsUpdateField = `${field}_needs_update` as keyof Registration;
+      if (registration[needsUpdateField]) {
+        const displayName = FIELD_DISPLAY_NAMES[field] || field;
+        requestedFields.push(displayName);
+      }
+    });
+
+    return requestedFields;
+  }
   private static getStatusBadgeHTML(status: StatusType): string {
     const getStatusConfig = (status: StatusType) => {
       switch (status) {
@@ -122,12 +199,9 @@ export class PDFGenerator {
           }</div>
           
           <h4 style="margin-top: 20px;">Ustad Information</h4>
-          <div class="field"><span class="label">Ustad Name:</span> ${
-            registration.ustad_name || "N/A"
-          }</div>
-          <div class="field"><span class="label">Ustad Email:</span> ${
-            registration.ustad_email || "N/A"
-          }</div>
+          <div class="field"><span class="label">Ustad:</span><br>${formatUstadsForPDF(
+            registration.ustads
+          )}</div>
           
           <h4 style="margin-top: 20px;">Senior Gatkai Coach Information</h4>
           <div class="field"><span class="label">Senior Gatkai Coach Name:</span> ${
@@ -308,16 +382,41 @@ export class PDFGenerator {
           </div>
         </div>
 
-        ${
-          registration.admin_notes
-            ? `
+        ${(() => {
+          const requestedUpdates = this.getRequestedUpdates(registration);
+          const hasRequestedUpdates = requestedUpdates.length > 0;
+          const hasPublicNotes = registration.admin_notes?.public_notes;
+
+          if (!hasRequestedUpdates && !hasPublicNotes) {
+            return "";
+          }
+
+          return `
         <div class="section">
           <h3>Admin Notes</h3>
-          <div class="field" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #17a2b8;">${registration.admin_notes}</div>
+          ${
+            hasRequestedUpdates
+              ? `
+          <div class="field" style="background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin-bottom: 15px;">
+            <strong>Information Update Required</strong><br>
+            The following information has been requested by the Jauhr E Teg Team to be updated:<br><br>
+            ${requestedUpdates.map((field) => `• ${field}`).join("<br>")}
+          </div>
+          `
+              : ""
+          }
+          ${
+            hasPublicNotes
+              ? `
+          <div class="field" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #17a2b8;">
+            ${registration.admin_notes?.public_notes || ""}
+          </div>
+          `
+              : ""
+          }
         </div>
-        `
-            : ""
-        }
+        `;
+        })()}
       </body>
       </html>
     `;

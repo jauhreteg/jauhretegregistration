@@ -33,8 +33,16 @@ export class RegistrationService {
 
       if (filters?.searchTerm) {
         const searchTerm = filters.searchTerm.toLowerCase();
+        // Use JSONB operators to search within ustads array for both name and email fields
         query = query.or(
-          `team_name.ilike.%${searchTerm}%,form_token.ilike.%${searchTerm}%,team_location.ilike.%${searchTerm}%,ustad_name.ilike.%${searchTerm}%`
+          `team_name.ilike.%${searchTerm}%,form_token.ilike.%${searchTerm}%,team_location.ilike.%${searchTerm}%`
+        );
+        // Add separate conditions for ustads JSONB search
+        query = query.or(
+          `ustads->0->>name.ilike.%${searchTerm}%,ustads->1->>name.ilike.%${searchTerm}%,ustads->2->>name.ilike.%${searchTerm}%,ustads->3->>name.ilike.%${searchTerm}%,ustads->4->>name.ilike.%${searchTerm}%`
+        );
+        query = query.or(
+          `ustads->0->>email.ilike.%${searchTerm}%,ustads->1->>email.ilike.%${searchTerm}%,ustads->2->>email.ilike.%${searchTerm}%,ustads->3->>email.ilike.%${searchTerm}%,ustads->4->>email.ilike.%${searchTerm}%`
         );
       }
 
@@ -102,8 +110,16 @@ export class RegistrationService {
 
       if (filters?.searchTerm) {
         const searchTerm = filters.searchTerm.toLowerCase();
+        // Use JSONB operators to search within ustads array for both name and email fields
         query = query.or(
-          `team_name.ilike.%${searchTerm}%,form_token.ilike.%${searchTerm}%,team_location.ilike.%${searchTerm}%,ustad_name.ilike.%${searchTerm}%`
+          `team_name.ilike.%${searchTerm}%,form_token.ilike.%${searchTerm}%,team_location.ilike.%${searchTerm}%`
+        );
+        // Add separate conditions for ustads JSONB search
+        query = query.or(
+          `ustads->0->>name.ilike.%${searchTerm}%,ustads->1->>name.ilike.%${searchTerm}%,ustads->2->>name.ilike.%${searchTerm}%,ustads->3->>name.ilike.%${searchTerm}%,ustads->4->>name.ilike.%${searchTerm}%`
+        );
+        query = query.or(
+          `ustads->0->>email.ilike.%${searchTerm}%,ustads->1->>email.ilike.%${searchTerm}%,ustads->2->>email.ilike.%${searchTerm}%,ustads->3->>email.ilike.%${searchTerm}%,ustads->4->>email.ilike.%${searchTerm}%`
         );
       }
 

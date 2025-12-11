@@ -5,11 +5,14 @@ import {
   Registration,
   StatusType,
   FIELD_DISPLAY_NAMES,
+  Ustad,
 } from "@/types/database";
 import { RegistrationService } from "@/services/registrationService";
 import { useUser } from "@/app/dashboard/layout";
 import { useSuccessNotifications } from "@/hooks/useSuccessNotifications";
 import { getAdminUserName as getAdminUserNameUtil } from "@/lib/utils/adminUtils";
+import { formatUstadsDisplay } from "@/utils/ustads-utils";
+import UstadManager from "@/components/UstadManager";
 import {
   Dialog,
   DialogContent,
@@ -724,6 +727,14 @@ function RegistrationDetailModal({
     });
   }, []);
 
+  // Handler for ustads array
+  const handleUstadsChange = useCallback((ustads: Ustad[]) => {
+    setEditedRegistration((prev) => ({
+      ...prev,
+      ustads,
+    }));
+  }, []);
+
   // Handler for file arrays (team_photo, dob_proof fields)
   const handleFileArrayChange = useCallback(
     (fieldName: string, files: string[]) => {
@@ -750,6 +761,7 @@ function RegistrationDetailModal({
         // Update admin_notes requested_updates array
         const currentAdminNotes = prev.admin_notes || {
           internal_notes: null,
+          public_notes: null,
           requested_updates: [],
         };
 
@@ -1028,23 +1040,127 @@ function RegistrationDetailModal({
                 </CardContent>
               </Card>
 
-              {/* Ustad Information */}
+              {/* Ustads Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Ustad Information</CardTitle>
+                  <CardTitle className="text-lg">Ustads Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {renderEditableField({
-                    fieldName: "ustad_name",
-                    label: "Ustad Name",
-                    value: editedRegistration.ustad_name,
-                  })}
-                  {renderEditableField({
-                    fieldName: "ustad_email",
-                    label: "Ustad Email",
-                    value: editedRegistration.ustad_email,
-                    type: "email",
-                  })}
+                  {editingFields.has("ustads") ? (
+                    <div className="space-y-4">
+                      <UstadManager
+                        ustads={editedRegistration.ustads || []}
+                        onUstadsChange={handleUstadsChange}
+                        validationErrors={{}}
+                        onValidationError={() => {}} // Not implementing validation errors in modal for now
+                        isRequired={() => false}
+                      />
+                      <div className="flex items-center justify-end">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => cancelEditing("ustads")}
+                            disabled={isSaving}
+                          >
+                            <X className="mr-2 h-4 w-4" />
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => saveField("ustads")}
+                            disabled={isSaving}
+                          >
+                            <Save className="mr-2 h-4 w-4" />
+                            {isSaving ? "Saving..." : "Save"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <Label
+                            className={`text-sm font-medium ${
+                              editedRegistration.ustads_needs_update
+                                ? "text-orange-600"
+                                : ""
+                            }`}
+                          >
+                            Ustads
+                          </Label>
+                          {editedRegistration.ustads_needs_update && (
+                            <span className="text-xs text-orange-500">
+                              (needs update)
+                            </span>
+                          )}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className={`h-5 px-1.5 text-xs ml-1 ${
+                              editedRegistration.ustads_needs_update
+                                ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                                : "text-gray-500 hover:bg-gray-100"
+                            }`}
+                            onClick={() =>
+                              handleNeedsUpdateChange(
+                                "ustads",
+                                !editedRegistration.ustads_needs_update
+                              )
+                            }
+                          >
+                            {editedRegistration.ustads_needs_update
+                              ? "Remove"
+                              : "Mark"}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between group">
+                        <div
+                          className={`flex-1 px-3 py-2 border rounded text-sm ${
+                            editedRegistration.ustads_needs_update
+                              ? "bg-orange-50 border-orange-200"
+                              : "bg-gray-50"
+                          }`}
+                        >
+                          {editedRegistration.ustads &&
+                          editedRegistration.ustads.length > 0 ? (
+                            <div className="space-y-2">
+                              {editedRegistration.ustads.map((ustad, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between"
+                                >
+                                  <div>
+                                    <span className="font-medium">
+                                      {ustad.name}
+                                    </span>
+                                    <span className="text-sm text-gray-600 ml-2">
+                                      ({ustad.email})
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-500 italic">
+                              No ustads assigned
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => startEditing("ustads")}
+                          className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -1600,6 +1716,7 @@ function RegistrationDetailModal({
                         const currentAdminNotes =
                           editedRegistration.admin_notes || {
                             internal_notes: null,
+                            public_notes: null,
                             requested_updates: [],
                           };
                         setEditedRegistration((prev) => ({
@@ -1616,6 +1733,41 @@ function RegistrationDetailModal({
                     <p className="text-xs text-muted-foreground mt-1">
                       These notes are for internal use only and will not be sent
                       to the team.
+                    </p>
+                  </div>
+
+                  {/* Public Notes Box */}
+                  <div>
+                    <Label
+                      htmlFor="public-notes"
+                      className="text-sm font-medium mb-2 block"
+                    >
+                      Public Notes
+                    </Label>
+                    <Textarea
+                      id="public-notes"
+                      value={editedRegistration.admin_notes?.public_notes || ""}
+                      onChange={(e) => {
+                        const currentAdminNotes =
+                          editedRegistration.admin_notes || {
+                            internal_notes: null,
+                            public_notes: null,
+                            requested_updates: [],
+                          };
+                        setEditedRegistration((prev) => ({
+                          ...prev,
+                          admin_notes: {
+                            ...currentAdminNotes,
+                            public_notes: e.target.value || null,
+                          },
+                        }));
+                      }}
+                      placeholder="Notes visible to the team on PDF and view-registration page..."
+                      className="min-h-[100px] resize-none"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      These notes will be visible to the team on the PDF and
+                      view-registration page.
                     </p>
                   </div>
 

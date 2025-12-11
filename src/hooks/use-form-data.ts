@@ -1,12 +1,16 @@
 import { useState, useCallback } from "react";
 import { FormData } from "@/types/form-types";
 import { getInitialFormData } from "@/data/initial-form-data";
+import { Ustad } from "@/types/database";
 
 export function useFormData() {
   const [formData, setFormData] = useState<FormData>(getInitialFormData());
 
   const updateField = useCallback(
-    (field: keyof FormData, value: string | File | File[] | null | boolean) => {
+    (
+      field: keyof FormData,
+      value: string | File | File[] | Ustad[] | null | boolean
+    ) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
     []
