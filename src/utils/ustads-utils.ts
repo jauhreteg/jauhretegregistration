@@ -45,16 +45,16 @@ export const formatUstadsTooltip = (ustads: Ustad[] | null): string => {
 };
 
 /**
- * Formats ustads array for CSV export using pipe separator to avoid comma conflicts
+ * Formats ustads array for CSV export using comma separator
  * @param ustads Array of ustad objects
- * @returns Pipe-separated string formatted as "Name1 (email1) | Name2 (email2)" or "None" if empty
+ * @returns Comma-separated string formatted as "Name1 (email1), Name2 (email2)" or "None" if empty
  */
 export const formatUstadsForCSV = (ustads: Ustad[] | null): string => {
   if (!ustads || ustads.length === 0) {
     return "None";
   }
 
-  return ustads.map((ustad) => `${ustad.name} (${ustad.email})`).join(" | ");
+  return ustads.map((ustad) => `${ustad.name} (${ustad.email})`).join(", ");
 };
 
 /**
@@ -178,7 +178,7 @@ export const normalizeUstadsArray = (ustads: Ustad[]): Ustad[] => {
  */
 export const areUstadsEqual = (
   ustads1: Ustad[] | null,
-  ustads2: Ustad[] | null
+  ustads2: Ustad[] | null,
 ): boolean => {
   // Handle null cases
   if (ustads1 === null && ustads2 === null) return true;
@@ -203,7 +203,7 @@ export const areUstadsEqual = (
  */
 export const convertLegacyUstadToArray = (
   ustadName: string | null,
-  ustadEmail: string | null
+  ustadEmail: string | null,
 ): Ustad[] => {
   // If both name and email are provided, create ustad object
   if (ustadName && ustadName.trim() && ustadEmail && ustadEmail.trim()) {
@@ -239,7 +239,7 @@ export const convertLegacyUstadToArray = (
 export const validateEmailUniqueness = (
   email: string,
   currentIndex: number,
-  ustads: Ustad[]
+  ustads: Ustad[],
 ): string | null => {
   if (!email || email.trim() === "") return null;
 
@@ -247,7 +247,7 @@ export const validateEmailUniqueness = (
   const isDuplicate = ustads.some(
     (ustad, index) =>
       index !== currentIndex &&
-      ustad.email.trim().toLowerCase() === normalizedEmail
+      ustad.email.trim().toLowerCase() === normalizedEmail,
   );
 
   return isDuplicate ? "This email is already used by another ustad" : null;

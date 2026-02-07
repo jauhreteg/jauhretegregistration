@@ -322,24 +322,24 @@ function ViewRegistrationPageContent() {
 
     try {
       const result = await RegistrationService.getRegistrationByToken(
-        formToken.trim()
+        formToken.trim(),
       );
 
       if (result.error) {
         setError(
-          "Registration not found. Please check your token and try again."
+          "Registration not found. Please check your token and try again.",
         );
       } else if (result.data) {
         setRegistration(result.data);
       } else {
         setError(
-          "Registration not found. Please check your token and try again."
+          "Registration not found. Please check your token and try again.",
         );
       }
     } catch (err) {
       console.error("Error fetching registration:", err);
       setError(
-        "An error occurred while searching for your registration. Please try again."
+        "An error occurred while searching for your registration. Please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -356,7 +356,7 @@ function ViewRegistrationPageContent() {
     // Only allow editing if status is "information requested"
     if (registration.status !== "information requested") {
       setError(
-        "Registration editing is only allowed when information is requested by admin."
+        "Registration editing is only allowed when information is requested by admin.",
       );
       return;
     }
@@ -420,12 +420,12 @@ function ViewRegistrationPageContent() {
 
       const result = await RegistrationService.updateRegistration(
         editedRegistration.id,
-        updateData
+        updateData,
       );
 
       if (result.error) {
         showError(
-          `Failed to save changes: ${result.error.message || result.error}`
+          `Failed to save changes: ${result.error.message || result.error}`,
         );
         setError("Failed to save changes. Please try again.");
       } else if (result.data) {
@@ -496,7 +496,7 @@ function ViewRegistrationPageContent() {
           if (updated.admin_notes?.requested_updates) {
             const currentRequests =
               updated.admin_notes.requested_updates.filter(
-                (field) => !backupFields.includes(field)
+                (field) => !backupFields.includes(field),
               );
             updated.admin_notes = {
               ...updated.admin_notes,
@@ -689,13 +689,13 @@ function ViewRegistrationPageContent() {
                           <div>
                             Date:{" "}
                             {new Date(
-                              registration.submission_date_time
+                              registration.submission_date_time,
                             ).toLocaleDateString()}
                           </div>
                           <div>
                             Time:{" "}
                             {new Date(
-                              registration.submission_date_time
+                              registration.submission_date_time,
                             ).toLocaleTimeString()}
                           </div>
                         </div>
@@ -706,13 +706,13 @@ function ViewRegistrationPageContent() {
                           <div>
                             Date:{" "}
                             {new Date(
-                              registration.updated_at
+                              registration.updated_at,
                             ).toLocaleDateString()}
                           </div>
                           <div>
                             Time:{" "}
                             {new Date(
-                              registration.updated_at
+                              registration.updated_at,
                             ).toLocaleTimeString()}
                           </div>
                         </div>
@@ -741,10 +741,11 @@ function ViewRegistrationPageContent() {
                     <div className="space-y-4">
                       {/* Ustads Section */}
                       <div className="col-span-full">
-                        {registration.ustads_needs_update && (
+                        {registration.ustads?.some((u) => u.needs_update) && (
                           <div className="mb-2 p-2 bg-orange-50 border border-orange-200 rounded">
                             <span className="text-sm text-orange-800 font-medium">
-                              Please review and update your ustads information
+                              Please review and update the highlighted ustad(s)
+                              information
                             </span>
                           </div>
                         )}
@@ -767,18 +768,52 @@ function ViewRegistrationPageContent() {
                               registration.ustads
                                 .map((ustad, index) => [
                                   <div key={`ustad-${index}-name`}>
-                                    <span className="text-sm font-medium text-gray-700">
+                                    <span
+                                      className={`text-sm font-medium ${
+                                        ustad.needs_update
+                                          ? "text-orange-600"
+                                          : "text-gray-700"
+                                      }`}
+                                    >
                                       Ustad {index + 1} Name
+                                      {ustad.needs_update && (
+                                        <span className="text-xs ml-1">
+                                          (needs update)
+                                        </span>
+                                      )}
                                     </span>
-                                    <div className="text-gray-900 mt-1">
+                                    <div
+                                      className={`mt-1 ${
+                                        ustad.needs_update
+                                          ? "text-orange-900 font-medium"
+                                          : "text-gray-900"
+                                      }`}
+                                    >
                                       {ustad.name || "N/A"}
                                     </div>
                                   </div>,
                                   <div key={`ustad-${index}-email`}>
-                                    <span className="text-sm font-medium text-gray-700">
+                                    <span
+                                      className={`text-sm font-medium ${
+                                        ustad.needs_update
+                                          ? "text-orange-600"
+                                          : "text-gray-700"
+                                      }`}
+                                    >
                                       Ustad {index + 1} Email
+                                      {ustad.needs_update && (
+                                        <span className="text-xs ml-1">
+                                          (needs update)
+                                        </span>
+                                      )}
                                     </span>
-                                    <div className="text-gray-900 mt-1">
+                                    <div
+                                      className={`mt-1 ${
+                                        ustad.needs_update
+                                          ? "text-orange-900 font-medium"
+                                          : "text-gray-900"
+                                      }`}
+                                    >
                                       {ustad.email || "N/A"}
                                     </div>
                                   </div>,
@@ -1000,7 +1035,7 @@ function ViewRegistrationPageContent() {
                             onChange={(value) =>
                               handleFieldChange(
                                 "player1_emergency_contact_name",
-                                value
+                                value,
                               )
                             }
                           />
@@ -1021,7 +1056,7 @@ function ViewRegistrationPageContent() {
                             onChange={(value) =>
                               handleFieldChange(
                                 "player1_emergency_contact_phone",
-                                value
+                                value,
                               )
                             }
                           />
@@ -1076,7 +1111,7 @@ function ViewRegistrationPageContent() {
                             onChange={(value) =>
                               handleFieldChange(
                                 "player1_gatka_experience",
-                                value
+                                value,
                               )
                             }
                           />
@@ -1218,7 +1253,7 @@ function ViewRegistrationPageContent() {
                             onChange={(value) =>
                               handleFieldChange(
                                 "player2_emergency_contact_name",
-                                value
+                                value,
                               )
                             }
                           />
@@ -1239,7 +1274,7 @@ function ViewRegistrationPageContent() {
                             onChange={(value) =>
                               handleFieldChange(
                                 "player2_emergency_contact_phone",
-                                value
+                                value,
                               )
                             }
                           />
@@ -1294,7 +1329,7 @@ function ViewRegistrationPageContent() {
                             onChange={(value) =>
                               handleFieldChange(
                                 "player2_gatka_experience",
-                                value
+                                value,
                               )
                             }
                           />
@@ -1436,7 +1471,7 @@ function ViewRegistrationPageContent() {
                             onChange={(value) =>
                               handleFieldChange(
                                 "player3_emergency_contact_name",
-                                value
+                                value,
                               )
                             }
                           />
@@ -1457,7 +1492,7 @@ function ViewRegistrationPageContent() {
                             onChange={(value) =>
                               handleFieldChange(
                                 "player3_emergency_contact_phone",
-                                value
+                                value,
                               )
                             }
                           />
@@ -1512,7 +1547,7 @@ function ViewRegistrationPageContent() {
                             onChange={(value) =>
                               handleFieldChange(
                                 "player3_gatka_experience",
-                                value
+                                value,
                               )
                             }
                           />
@@ -1571,7 +1606,7 @@ function ViewRegistrationPageContent() {
                               onChange={(e) =>
                                 handleFieldChange(
                                   "backup_player",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="w-full px-3 py-2 border-2 border-orange-300 rounded-md focus:border-orange-500 focus:ring focus:ring-orange-200 bg-orange-50"
@@ -1705,7 +1740,7 @@ function ViewRegistrationPageContent() {
                               onChange={(value) =>
                                 handleFieldChange(
                                   "backup_emergency_contact_name",
-                                  value
+                                  value,
                                 )
                               }
                             />
@@ -1726,7 +1761,7 @@ function ViewRegistrationPageContent() {
                               onChange={(value) =>
                                 handleFieldChange(
                                   "backup_emergency_contact_phone",
-                                  value
+                                  value,
                                 )
                               }
                             />
@@ -1781,7 +1816,7 @@ function ViewRegistrationPageContent() {
                               onChange={(value) =>
                                 handleFieldChange(
                                   "backup_gatka_experience",
-                                  value
+                                  value,
                                 )
                               }
                             />
@@ -1870,12 +1905,17 @@ function ViewRegistrationPageContent() {
                               const fieldOrder = [
                                 // Team Information (as it appears on view-registration)
                                 "team_name",
-                                "ustads",
+                                "team_location",
+                                "team_photo",
+                                // Individual Ustads (after team_photo, before coach)
+                                "ustad_1",
+                                "ustad_2",
+                                "ustad_3",
+                                "ustad_4",
+                                "ustad_5",
                                 "coach_name",
                                 "coach_email",
-                                "team_location",
                                 "player_order",
-                                "team_photo",
 
                                 // Player 1 Information
                                 "player1_name",
@@ -1935,16 +1975,16 @@ function ViewRegistrationPageContent() {
                               ];
 
                               // Sort requested updates based on field order
-                              const sortedUpdates = requestedUpdates.sort(
-                                (a, b) => {
+                              const sortedUpdates = requestedUpdates
+                                .filter((field) => field !== "ustads") // Filter out legacy 'ustads' field
+                                .sort((a, b) => {
                                   const aIndex = fieldOrder.indexOf(a);
                                   const bIndex = fieldOrder.indexOf(b);
                                   return (
                                     (aIndex === -1 ? 999 : aIndex) -
                                     (bIndex === -1 ? 999 : bIndex)
                                   );
-                                }
-                              );
+                                });
 
                               return sortedUpdates.map((field, index) => {
                                 const displayName =

@@ -8,18 +8,35 @@ import {
 import { formatUstadsForPDF } from "@/utils/ustads-utils";
 
 export class PDFGenerator {
-  private static getRequestedUpdates(registration: Registration): string[] {
-    const requestedFields: string[] = [];
+  // Helper function to wrap text in red/bold if it needs update
+  private static wrapIfNeedsUpdate(
+    value: string | null,
+    fieldName: string,
+    requestedUpdates: string[],
+  ): string {
+    const needsUpdate = requestedUpdates.includes(fieldName);
+    const displayValue = value || "N/A";
+    return needsUpdate
+      ? `<span style="color: #dc2626; font-weight: 700;">${displayValue}</span>`
+      : displayValue;
+  }
 
-    // Check all fields that have a corresponding _needs_update field
-    const fieldsToCheck = [
+  private static getRequestedUpdates(registration: Registration): string[] {
+    const requestedUpdates = registration.admin_notes?.requested_updates || [];
+
+    // Define field order to match form structure
+    const fieldOrder = [
       "team_name",
-      "ustads",
+      "team_location",
+      "team_photo",
+      "ustad_1",
+      "ustad_2",
+      "ustad_3",
+      "ustad_4",
+      "ustad_5",
       "coach_name",
       "coach_email",
-      "team_location",
       "player_order",
-      "team_photo",
       "player1_name",
       "player1_singh_kaur",
       "player1_dob",
@@ -70,15 +87,17 @@ export class PDFGenerator {
       "backup_gatka_experience",
     ];
 
-    fieldsToCheck.forEach((field) => {
-      const needsUpdateField = `${field}_needs_update` as keyof Registration;
-      if (registration[needsUpdateField]) {
-        const displayName = FIELD_DISPLAY_NAMES[field] || field;
-        requestedFields.push(displayName);
-      }
-    });
+    // Sort and filter requested updates
+    const sortedUpdates = requestedUpdates
+      .filter((field) => field !== "ustads") // Filter out legacy 'ustads' field
+      .sort((a, b) => {
+        const aIndex = fieldOrder.indexOf(a);
+        const bIndex = fieldOrder.indexOf(b);
+        return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+      })
+      .map((field) => FIELD_DISPLAY_NAMES[field] || field);
 
-    return requestedFields;
+    return sortedUpdates;
   }
   private static getStatusBadgeHTML(status: StatusType): string {
     const getStatusConfig = (status: StatusType) => {
@@ -132,6 +151,10 @@ export class PDFGenerator {
   }
 
   private static generatePDFContent(registration: Registration): string {
+    // Get requested updates array
+    const requestedUpdates = registration.admin_notes?.requested_updates || [];
+    const hasRequestedUpdates = requestedUpdates.length > 0;
+
     return `
       <!DOCTYPE html>
       <html>
@@ -140,6 +163,10 @@ export class PDFGenerator {
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }
           .header { text-align: center; margin-bottom: 30px; }
+          .legend { background-color: #fef2f2; border: 2px solid #dc2626; border-radius: 8px; padding: 15px; margin-bottom: 25px; }
+          .legend-title { color: #dc2626; font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+          .legend-text { color: #991b1b; font-size: 14px; }
+          .needs-update-example { color: #dc2626; font-weight: 700; }
           .section { margin-bottom: 25px; page-break-inside: avoid; }
           .field { margin: 8px 0; }
           .label { font-weight: bold; display: inline-block; min-width: 120px; }
@@ -165,6 +192,20 @@ export class PDFGenerator {
           <p><strong>Form Token:</strong> ${registration.form_token}</p>
         </div>
 
+        ${
+          hasRequestedUpdates
+            ? `
+        <!-- Update Legend -->
+        <div class="legend">
+          <div class="legend-title">⚠️ Information Updates Required</div>
+          <div class="legend-text">
+            Any information displayed in <span class="needs-update-example">red and bold text</span> requires your attention and needs to be updated.
+          </div>
+        </div>
+        `
+            : ""
+        }
+
         <!-- Form Metadata Section -->
         <div class="section">
           <h3>Form Metadata</h3>
@@ -172,49 +213,71 @@ export class PDFGenerator {
             registration.form_token
           }</div>
           <div class="field"><span class="label">Status:</span> ${this.getStatusBadgeHTML(
-            registration.status
+            registration.status,
           )}</div>
           <div class="field"><span class="label">Division:</span> ${
             registration.division
           }</div>
           <div class="field"><span class="label">Submitted:</span> ${new Date(
-            registration.submission_date_time
+            registration.submission_date_time,
           ).toLocaleString()}</div>
           <div class="field"><span class="label">Created:</span> ${new Date(
-            registration.created_at
+            registration.created_at,
           ).toLocaleString()}</div>
           <div class="field"><span class="label">Last Updated:</span> ${new Date(
-            registration.updated_at
+            registration.updated_at,
           ).toLocaleString()}</div>
         </div>
 
         <!-- Team Information Section -->
         <div class="section">
           <h3>Team Information</h3>
-          <div class="field"><span class="label">Team Name:</span> ${
-            registration.team_name
-          }</div>
-          <div class="field"><span class="label">Location:</span> ${
-            registration.team_location || "N/A"
-          }</div>
-          
-          <h4 style="margin-top: 20px;">Ustad Information</h4>
-          <div class="field"><span class="label">Ustad:</span><br>${formatUstadsForPDF(
-            registration.ustads
+          <div class="field"><span class="label">Team Name:</span> ${this.wrapIfNeedsUpdate(
+            registration.team_name,
+            "team_name",
+            requestedUpdates,
+          )}</div>
+          <div class="field"><span class="label">Location:</span> ${this.wrapIfNeedsUpdate(
+            registration.team_location,
+            "team_location",
+            requestedUpdates,
           )}</div>
           
-          <h4 style="margin-top: 20px;">Senior Gatkai Coach Information</h4>
-          <div class="field"><span class="label">Senior Gatkai Coach Name:</span> ${
-            registration.coach_name || "N/A"
-          }</div>
-          <div class="field"><span class="label">Senior Gatkai Coach Email:</span> ${
-            registration.coach_email || "N/A"
+          <h4 style="margin-top: 20px;">Ustad Information</h4>
+          <div class="field"><span class="label">Ustad:</span><br>${
+            registration.ustads && registration.ustads.length > 0
+              ? registration.ustads
+                  .map((ustad, index) => {
+                    const ustadFieldName = `ustad_${index + 1}`;
+                    const needsUpdate =
+                      requestedUpdates.includes(ustadFieldName);
+                    const displayText = `${index + 1}. ${ustad.name} (${ustad.email})`;
+                    return needsUpdate
+                      ? `<span style="color: #dc2626; font-weight: 700;">${displayText}</span>`
+                      : displayText;
+                  })
+                  .join("<br>")
+              : "None"
           }</div>
           
+          <h4 style="margin-top: 20px;">Senior Gatkai Coach Information</h4>
+          <div class="field"><span class="label">Senior Gatkai Coach Name:</span> ${this.wrapIfNeedsUpdate(
+            registration.coach_name,
+            "coach_name",
+            requestedUpdates,
+          )}</div>
+          <div class="field"><span class="label">Senior Gatkai Coach Email:</span> ${this.wrapIfNeedsUpdate(
+            registration.coach_email,
+            "coach_email",
+            requestedUpdates,
+          )}</div>
+          
           <h4 style="margin-top: 20px;">Player Order</h4>
-          <div class="field"><span class="label">Default Player Order:</span> ${
-            registration.player_order || "N/A"
-          }</div>
+          <div class="field"><span class="label">Default Player Order:</span> ${this.wrapIfNeedsUpdate(
+            registration.player_order,
+            "player_order",
+            requestedUpdates,
+          )}</div>
         </div>
 
         <!-- Player Information Section -->
@@ -225,39 +288,61 @@ export class PDFGenerator {
             <div class="player-header">Player 1</div>
             <table>
               <tr><th>Field</th><th>Value</th></tr>
-              <tr><td><strong>Name</strong></td><td>${
-                registration.player1_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Date of Birth</strong></td><td>${
-                registration.player1_dob || "N/A"
-              }</td></tr>
-              <tr><td><strong>Singh/Kaur</strong></td><td>${
-                registration.player1_singh_kaur || "N/A"
-              }</td></tr>
-              <tr><td><strong>Phone</strong></td><td>${
-                registration.player1_phone_number || "N/A"
-              }</td></tr>
-              <tr><td><strong>Email</strong></td><td>${
-                registration.player1_email || "N/A"
-              }</td></tr>
-              <tr><td><strong>City</strong></td><td>${
-                registration.player1_city || "N/A"
-              }</td></tr>
-              <tr><td><strong>Father's Name</strong></td><td>${
-                registration.player1_father_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Mother's Name</strong></td><td>${
-                registration.player1_mother_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Contact</strong></td><td>${
-                registration.player1_emergency_contact_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Phone</strong></td><td>${
-                registration.player1_emergency_contact_phone || "N/A"
-              }</td></tr>
-              <tr><td><strong>Gatka Experience</strong></td><td>${
-                registration.player1_gatka_experience || "N/A"
-              }</td></tr>
+              <tr><td><strong>Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_name,
+                "player1_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Date of Birth</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_dob,
+                "player1_dob",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Singh/Kaur</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_singh_kaur,
+                "player1_singh_kaur",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Phone</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_phone_number,
+                "player1_phone_number",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Email</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_email,
+                "player1_email",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>City</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_city,
+                "player1_city",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Father's Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_father_name,
+                "player1_father_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Mother's Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_mother_name,
+                "player1_mother_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Emergency Contact</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_emergency_contact_name,
+                "player1_emergency_contact_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Emergency Phone</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_emergency_contact_phone,
+                "player1_emergency_contact_phone",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Gatka Experience</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player1_gatka_experience,
+                "player1_gatka_experience",
+                requestedUpdates,
+              )}</td></tr>
             </table>
           </div>
 
@@ -265,39 +350,61 @@ export class PDFGenerator {
             <div class="player-header">Player 2</div>
             <table>
               <tr><th>Field</th><th>Value</th></tr>
-              <tr><td><strong>Name</strong></td><td>${
-                registration.player2_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Date of Birth</strong></td><td>${
-                registration.player2_dob || "N/A"
-              }</td></tr>
-              <tr><td><strong>Singh/Kaur</strong></td><td>${
-                registration.player2_singh_kaur || "N/A"
-              }</td></tr>
-              <tr><td><strong>Phone</strong></td><td>${
-                registration.player2_phone_number || "N/A"
-              }</td></tr>
-              <tr><td><strong>Email</strong></td><td>${
-                registration.player2_email || "N/A"
-              }</td></tr>
-              <tr><td><strong>City</strong></td><td>${
-                registration.player2_city || "N/A"
-              }</td></tr>
-              <tr><td><strong>Father's Name</strong></td><td>${
-                registration.player2_father_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Mother's Name</strong></td><td>${
-                registration.player2_mother_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Contact</strong></td><td>${
-                registration.player2_emergency_contact_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Phone</strong></td><td>${
-                registration.player2_emergency_contact_phone || "N/A"
-              }</td></tr>
-              <tr><td><strong>Gatka Experience</strong></td><td>${
-                registration.player2_gatka_experience || "N/A"
-              }</td></tr>
+              <tr><td><strong>Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_name,
+                "player2_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Date of Birth</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_dob,
+                "player2_dob",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Singh/Kaur</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_singh_kaur,
+                "player2_singh_kaur",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Phone</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_phone_number,
+                "player2_phone_number",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Email</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_email,
+                "player2_email",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>City</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_city,
+                "player2_city",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Father's Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_father_name,
+                "player2_father_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Mother's Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_mother_name,
+                "player2_mother_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Emergency Contact</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_emergency_contact_name,
+                "player2_emergency_contact_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Emergency Phone</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_emergency_contact_phone,
+                "player2_emergency_contact_phone",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Gatka Experience</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player2_gatka_experience,
+                "player2_gatka_experience",
+                requestedUpdates,
+              )}</td></tr>
             </table>
           </div>
 
@@ -305,39 +412,61 @@ export class PDFGenerator {
             <div class="player-header">Player 3</div>
             <table>
               <tr><th>Field</th><th>Value</th></tr>
-              <tr><td><strong>Name</strong></td><td>${
-                registration.player3_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Date of Birth</strong></td><td>${
-                registration.player3_dob || "N/A"
-              }</td></tr>
-              <tr><td><strong>Singh/Kaur</strong></td><td>${
-                registration.player3_singh_kaur || "N/A"
-              }</td></tr>
-              <tr><td><strong>Phone</strong></td><td>${
-                registration.player3_phone_number || "N/A"
-              }</td></tr>
-              <tr><td><strong>Email</strong></td><td>${
-                registration.player3_email || "N/A"
-              }</td></tr>
-              <tr><td><strong>City</strong></td><td>${
-                registration.player3_city || "N/A"
-              }</td></tr>
-              <tr><td><strong>Father's Name</strong></td><td>${
-                registration.player3_father_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Mother's Name</strong></td><td>${
-                registration.player3_mother_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Contact</strong></td><td>${
-                registration.player3_emergency_contact_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Phone</strong></td><td>${
-                registration.player3_emergency_contact_phone || "N/A"
-              }</td></tr>
-              <tr><td><strong>Gatka Experience</strong></td><td>${
-                registration.player3_gatka_experience || "N/A"
-              }</td></tr>
+              <tr><td><strong>Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_name,
+                "player3_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Date of Birth</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_dob,
+                "player3_dob",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Singh/Kaur</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_singh_kaur,
+                "player3_singh_kaur",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Phone</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_phone_number,
+                "player3_phone_number",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Email</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_email,
+                "player3_email",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>City</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_city,
+                "player3_city",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Father's Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_father_name,
+                "player3_father_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Mother's Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_mother_name,
+                "player3_mother_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Emergency Contact</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_emergency_contact_name,
+                "player3_emergency_contact_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Emergency Phone</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_emergency_contact_phone,
+                "player3_emergency_contact_phone",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Gatka Experience</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.player3_gatka_experience,
+                "player3_gatka_experience",
+                requestedUpdates,
+              )}</td></tr>
             </table>
           </div>
 
@@ -345,39 +474,61 @@ export class PDFGenerator {
             <div class="player-header">Backup Player</div>
             <table>
               <tr><th>Field</th><th>Value</th></tr>
-              <tr><td><strong>Name</strong></td><td>${
-                registration.backup_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Date of Birth</strong></td><td>${
-                registration.backup_dob || "N/A"
-              }</td></tr>
-              <tr><td><strong>Singh/Kaur</strong></td><td>${
-                registration.backup_singh_kaur || "N/A"
-              }</td></tr>
-              <tr><td><strong>Phone</strong></td><td>${
-                registration.backup_phone_number || "N/A"
-              }</td></tr>
-              <tr><td><strong>Email</strong></td><td>${
-                registration.backup_email || "N/A"
-              }</td></tr>
-              <tr><td><strong>City</strong></td><td>${
-                registration.backup_city || "N/A"
-              }</td></tr>
-              <tr><td><strong>Father's Name</strong></td><td>${
-                registration.backup_father_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Mother's Name</strong></td><td>${
-                registration.backup_mother_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Contact</strong></td><td>${
-                registration.backup_emergency_contact_name || "N/A"
-              }</td></tr>
-              <tr><td><strong>Emergency Phone</strong></td><td>${
-                registration.backup_emergency_contact_phone || "N/A"
-              }</td></tr>
-              <tr><td><strong>Gatka Experience</strong></td><td>${
-                registration.backup_gatka_experience || "N/A"
-              }</td></tr>
+              <tr><td><strong>Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_name,
+                "backup_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Date of Birth</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_dob,
+                "backup_dob",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Singh/Kaur</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_singh_kaur,
+                "backup_singh_kaur",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Phone</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_phone_number,
+                "backup_phone_number",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Email</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_email,
+                "backup_email",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>City</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_city,
+                "backup_city",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Father's Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_father_name,
+                "backup_father_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Mother's Name</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_mother_name,
+                "backup_mother_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Emergency Contact</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_emergency_contact_name,
+                "backup_emergency_contact_name",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Emergency Phone</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_emergency_contact_phone,
+                "backup_emergency_contact_phone",
+                requestedUpdates,
+              )}</td></tr>
+              <tr><td><strong>Gatka Experience</strong></td><td>${this.wrapIfNeedsUpdate(
+                registration.backup_gatka_experience,
+                "backup_gatka_experience",
+                requestedUpdates,
+              )}</td></tr>
             </table>
           </div>
         </div>

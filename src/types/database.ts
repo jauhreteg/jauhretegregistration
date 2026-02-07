@@ -5,13 +5,18 @@
 export interface Ustad {
   name: string;
   email: string;
+  needs_update?: boolean; // Optional flag to mark individual ustads as needing updates
 }
 
 // Field name mapping for user-friendly display
 export const FIELD_DISPLAY_NAMES: Record<string, string> = {
   // Team fields
   team_name: "Team Name",
-  ustads: "Ustads",
+  ustad_1: "Ustad 1",
+  ustad_2: "Ustad 2",
+  ustad_3: "Ustad 3",
+  ustad_4: "Ustad 4",
+  ustad_5: "Ustad 5",
   coach_name: "Senior Gatkai Coach",
   coach_email: "Senior Gatkai Coach Email",
   team_location: "Team Location",

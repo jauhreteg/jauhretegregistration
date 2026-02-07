@@ -105,7 +105,13 @@ const UstadRow: React.FC<UstadRowProps> = ({
   };
 
   return (
-    <div className="flex items-start gap-3 p-4 border rounded-lg bg-gray-50/50 dark:bg-gray-800/50">
+    <div
+      className={`flex items-start gap-3 p-4 border rounded-lg ${
+        ustad.needs_update
+          ? "bg-orange-50/80 border-orange-300 dark:bg-orange-900/20 dark:border-orange-700"
+          : "bg-gray-50/50 dark:bg-gray-800/50"
+      }`}
+    >
       <div className="flex-shrink-0 mt-2">
         <GripVertical className="h-5 w-5 text-gray-400" />
       </div>
@@ -115,6 +121,11 @@ const UstadRow: React.FC<UstadRowProps> = ({
           <Label htmlFor={`ustad-name-${index}`}>
             Ustad {index + 1} Name{" "}
             <RequiredAsterisk fieldName="ustads" isRequired={isRequired} />
+            {ustad.needs_update && (
+              <span className="text-xs text-orange-600 ml-1">
+                (needs update)
+              </span>
+            )}
           </Label>
           <Input
             id={`ustad-name-${index}`}
@@ -126,7 +137,9 @@ const UstadRow: React.FC<UstadRowProps> = ({
             className={`h-10 ${
               validationErrors?.[`ustad_${index}_name`]
                 ? "border-red-500 focus:border-red-500"
-                : "border-gray-300 focus:border-gray-500"
+                : ustad.needs_update
+                  ? "border-orange-400 focus:border-orange-500"
+                  : "border-gray-300 focus:border-gray-500"
             }`}
           />
           {validationErrors?.[`ustad_${index}_name`] && (
@@ -140,6 +153,11 @@ const UstadRow: React.FC<UstadRowProps> = ({
           <Label htmlFor={`ustad-email-${index}`}>
             Ustad {index + 1} Email{" "}
             <RequiredAsterisk fieldName="ustads" isRequired={isRequired} />
+            {ustad.needs_update && (
+              <span className="text-xs text-orange-600 ml-1">
+                (needs update)
+              </span>
+            )}
           </Label>
           <Input
             id={`ustad-email-${index}`}
@@ -152,7 +170,9 @@ const UstadRow: React.FC<UstadRowProps> = ({
               validationErrors?.[`ustad_${index}_email`] ||
               validationErrors?.[`ustad_${index}_email_unique`]
                 ? "border-red-500 focus:border-red-500"
-                : "border-gray-300 focus:border-gray-500"
+                : ustad.needs_update
+                  ? "border-orange-400 focus:border-orange-500"
+                  : "border-gray-300 focus:border-gray-500"
             }`}
           />
           {validationErrors?.[`ustad_${index}_email`] && (

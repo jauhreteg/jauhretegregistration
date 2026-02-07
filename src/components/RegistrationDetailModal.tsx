@@ -456,7 +456,7 @@ const EditableField = React.memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 function RegistrationDetailModal({
@@ -497,7 +497,19 @@ function RegistrationDetailModal({
   // Update edited registration when prop changes
   React.useEffect(() => {
     if (registration) {
-      setEditedRegistration(registration);
+      // Sync ustads' needs_update flags with requested_updates array
+      const requestedUpdates =
+        registration.admin_notes?.requested_updates || [];
+      const syncedUstads =
+        registration.ustads?.map((ustad, index) => ({
+          ...ustad,
+          needs_update: requestedUpdates.includes(`ustad_${index + 1}`),
+        })) || [];
+
+      setEditedRegistration({
+        ...registration,
+        ustads: syncedUstads,
+      });
     }
   }, [registration]);
 
@@ -518,7 +530,7 @@ function RegistrationDetailModal({
         return newSet;
       });
     },
-    [registration]
+    [registration],
   );
 
   const saveField = useCallback(
@@ -530,7 +542,7 @@ function RegistrationDetailModal({
         const { error } = await RegistrationService.updateRegistrationByAdmin(
           registration.id,
           { [fieldName]: value },
-          adminUserName
+          adminUserName,
         );
 
         if (error) {
@@ -543,7 +555,7 @@ function RegistrationDetailModal({
         showUpdateSuccess(
           registration.form_token,
           registration.team_name,
-          fieldName
+          fieldName,
         );
 
         // Remove from editing fields on successful save
@@ -557,7 +569,7 @@ function RegistrationDetailModal({
         showError(
           `Failed to save ${fieldName}: ${
             error instanceof Error ? error.message : String(error)
-          }`
+          }`,
         );
       } finally {
         setIsSaving(false);
@@ -569,7 +581,7 @@ function RegistrationDetailModal({
       getAdminUserName,
       showUpdateSuccess,
       showError,
-    ]
+    ],
   );
 
   const updateField = useCallback(
@@ -588,7 +600,7 @@ function RegistrationDetailModal({
           const { error } = await RegistrationService.updateRegistrationByAdmin(
             registration.id,
             { [field]: value },
-            adminUserName
+            adminUserName,
           );
 
           if (error) {
@@ -606,14 +618,14 @@ function RegistrationDetailModal({
           showUpdateSuccess(
             registration.form_token,
             registration.team_name,
-            field
+            field,
           );
         } catch (error) {
           console.error(`Error updating ${field}:`, error);
           showError(
             `Failed to update ${field}: ${
               error instanceof Error ? error.message : String(error)
-            }`
+            }`,
           );
           // Revert the local change on error
           setEditedRegistration((prev) => ({
@@ -633,7 +645,7 @@ function RegistrationDetailModal({
       getAdminUserName,
       showUpdateSuccess,
       showError,
-    ]
+    ],
   );
 
   const handleSave = useCallback(async () => {
@@ -643,7 +655,7 @@ function RegistrationDetailModal({
       const { error } = await RegistrationService.updateFullRegistrationByAdmin(
         registration.id,
         editedRegistration,
-        adminUserName
+        adminUserName,
       );
 
       if (error) {
@@ -661,7 +673,7 @@ function RegistrationDetailModal({
       showError(
         `Failed to save registration: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     } finally {
       setIsSaving(false);
@@ -743,7 +755,7 @@ function RegistrationDetailModal({
         [fieldName]: files,
       }));
     },
-    []
+    [],
   );
 
   // Handler for needs_update boolean fields
@@ -775,7 +787,7 @@ function RegistrationDetailModal({
         } else {
           // Remove field if removing update requirement
           updatedRequestedFields = updatedRequestedFields.filter(
-            (field) => field !== fieldName
+            (field) => field !== fieldName,
           );
         }
 
@@ -787,7 +799,7 @@ function RegistrationDetailModal({
         return updatedReg;
       });
     },
-    []
+    [],
   );
 
   // Wrapper function to provide all EditableField props
@@ -835,7 +847,7 @@ function RegistrationDetailModal({
       handleFieldChange,
       handleNeedsUpdateChange,
       isSaving,
-    ]
+    ],
   );
 
   const EditableDocumentViewer = ({
@@ -1081,66 +1093,111 @@ function RegistrationDetailModal({
                     <div className="space-y-2">
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
-                          <Label
-                            className={`text-sm font-medium ${
-                              editedRegistration.ustads_needs_update
-                                ? "text-orange-600"
-                                : ""
-                            }`}
-                          >
-                            Ustads
-                          </Label>
-                          {editedRegistration.ustads_needs_update && (
-                            <span className="text-xs text-orange-500">
-                              (needs update)
-                            </span>
-                          )}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className={`h-5 px-1.5 text-xs ml-1 ${
-                              editedRegistration.ustads_needs_update
-                                ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
-                                : "text-gray-500 hover:bg-gray-100"
-                            }`}
-                            onClick={() =>
-                              handleNeedsUpdateChange(
-                                "ustads",
-                                !editedRegistration.ustads_needs_update
-                              )
-                            }
-                          >
-                            {editedRegistration.ustads_needs_update
-                              ? "Remove"
-                              : "Mark"}
-                          </Button>
+                          <Label className="text-sm font-medium">Ustads</Label>
                         </div>
                       </div>
                       <div className="flex items-center justify-between group">
-                        <div
-                          className={`flex-1 px-3 py-2 border rounded text-sm ${
-                            editedRegistration.ustads_needs_update
-                              ? "bg-orange-50 border-orange-200"
-                              : "bg-gray-50"
-                          }`}
-                        >
+                        <div className="flex-1 px-3 py-2 border rounded text-sm bg-gray-50">
                           {editedRegistration.ustads &&
                           editedRegistration.ustads.length > 0 ? (
                             <div className="space-y-2">
                               {editedRegistration.ustads.map((ustad, index) => (
                                 <div
                                   key={index}
-                                  className="flex items-center justify-between"
+                                  className={`flex items-center justify-between p-2 rounded ${
+                                    ustad.needs_update
+                                      ? "bg-orange-50 border border-orange-200"
+                                      : ""
+                                  }`}
                                 >
                                   <div>
-                                    <span className="font-medium">
+                                    <span
+                                      className={`font-medium ${
+                                        ustad.needs_update
+                                          ? "text-orange-600"
+                                          : ""
+                                      }`}
+                                    >
                                       {ustad.name}
                                     </span>
                                     <span className="text-sm text-gray-600 ml-2">
                                       ({ustad.email})
                                     </span>
+                                    {ustad.needs_update && (
+                                      <span className="text-xs text-orange-500 ml-2">
+                                        (needs update)
+                                      </span>
+                                    )}
                                   </div>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`h-6 px-2 text-xs ${
+                                      ustad.needs_update
+                                        ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                                        : "text-gray-500 hover:bg-gray-100"
+                                    }`}
+                                    onClick={() => {
+                                      const isCurrentlyMarked =
+                                        ustad.needs_update;
+                                      const ustadFieldName = `ustad_${index + 1}`;
+
+                                      // Update the ustad's needs_update flag
+                                      const updatedUstads =
+                                        editedRegistration.ustads.map((u, i) =>
+                                          i === index
+                                            ? {
+                                                ...u,
+                                                needs_update: !u.needs_update,
+                                              }
+                                            : u,
+                                        );
+
+                                      // Update requested_updates in admin_notes
+                                      const currentAdminNotes =
+                                        editedRegistration.admin_notes || {
+                                          internal_notes: null,
+                                          public_notes: null,
+                                          requested_updates: [],
+                                        };
+
+                                      let updatedRequestedFields = [
+                                        ...currentAdminNotes.requested_updates,
+                                      ];
+
+                                      if (!isCurrentlyMarked) {
+                                        // Add ustad field if marking for update
+                                        if (
+                                          !updatedRequestedFields.includes(
+                                            ustadFieldName,
+                                          )
+                                        ) {
+                                          updatedRequestedFields.push(
+                                            ustadFieldName,
+                                          );
+                                        }
+                                      } else {
+                                        // Remove ustad field if unmarking
+                                        updatedRequestedFields =
+                                          updatedRequestedFields.filter(
+                                            (field) => field !== ustadFieldName,
+                                          );
+                                      }
+
+                                      setEditedRegistration((prev) => ({
+                                        ...prev,
+                                        ustads: updatedUstads,
+                                        admin_notes: {
+                                          ...currentAdminNotes,
+                                          requested_updates:
+                                            updatedRequestedFields,
+                                        },
+                                      }));
+                                    }}
+                                  >
+                                    {ustad.needs_update ? "Remove" : "Mark"}
+                                  </Button>
                                 </div>
                               ))}
                             </div>
@@ -1621,10 +1678,10 @@ function RegistrationDetailModal({
                       <Calendar className="h-4 w-4 text-gray-400" />
                       <span>
                         {new Date(
-                          registration.submission_date_time
+                          registration.submission_date_time,
                         ).toLocaleDateString("en-US")}{" "}
                         {new Date(
-                          registration.submission_date_time
+                          registration.submission_date_time,
                         ).toLocaleTimeString("en-US", {
                           hour: "numeric",
                           minute: "2-digit",
@@ -1644,11 +1701,11 @@ function RegistrationDetailModal({
                       <span>
                         {new Date(
                           registration.updated_at ||
-                            registration.submission_date_time
+                            registration.submission_date_time,
                         ).toLocaleDateString("en-US")}{" "}
                         {new Date(
                           registration.updated_at ||
-                            registration.submission_date_time
+                            registration.submission_date_time,
                         ).toLocaleTimeString("en-US", {
                           hour: "numeric",
                           minute: "2-digit",
@@ -1784,11 +1841,90 @@ function RegistrationDetailModal({
                       value={
                         editedRegistration.admin_notes?.requested_updates
                           ?.length
-                          ? editedRegistration.admin_notes.requested_updates
-                              .map(
-                                (field) => FIELD_DISPLAY_NAMES[field] || field
-                              )
-                              .join("\n")
+                          ? (() => {
+                              // Define field order to match form structure
+                              const fieldOrder = [
+                                "team_name",
+                                "team_location",
+                                "team_photo",
+                                "ustad_1",
+                                "ustad_2",
+                                "ustad_3",
+                                "ustad_4",
+                                "ustad_5",
+                                "coach_name",
+                                "coach_email",
+                                "player_order",
+                                "player1_name",
+                                "player1_singh_kaur",
+                                "player1_dob",
+                                "player1_dob_proof",
+                                "player1_email",
+                                "player1_phone_number",
+                                "player1_emergency_contact_name",
+                                "player1_emergency_contact_phone",
+                                "player1_father_name",
+                                "player1_mother_name",
+                                "player1_city",
+                                "player1_gatka_experience",
+                                "player2_name",
+                                "player2_singh_kaur",
+                                "player2_dob",
+                                "player2_dob_proof",
+                                "player2_email",
+                                "player2_phone_number",
+                                "player2_emergency_contact_name",
+                                "player2_emergency_contact_phone",
+                                "player2_father_name",
+                                "player2_mother_name",
+                                "player2_city",
+                                "player2_gatka_experience",
+                                "player3_name",
+                                "player3_singh_kaur",
+                                "player3_dob",
+                                "player3_dob_proof",
+                                "player3_email",
+                                "player3_phone_number",
+                                "player3_emergency_contact_name",
+                                "player3_emergency_contact_phone",
+                                "player3_father_name",
+                                "player3_mother_name",
+                                "player3_city",
+                                "player3_gatka_experience",
+                                "backup_player",
+                                "backup_name",
+                                "backup_singh_kaur",
+                                "backup_dob",
+                                "backup_dob_proof",
+                                "backup_phone_number",
+                                "backup_emergency_contact_name",
+                                "backup_emergency_contact_phone",
+                                "backup_father_name",
+                                "backup_mother_name",
+                                "backup_city",
+                                "backup_gatka_experience",
+                              ];
+
+                              // Sort requested updates based on field order
+                              const sortedUpdates =
+                                editedRegistration.admin_notes.requested_updates
+                                  .filter((field) => field !== "ustads") // Filter out legacy 'ustads' field
+                                  .sort((a, b) => {
+                                    const aIndex = fieldOrder.indexOf(a);
+                                    const bIndex = fieldOrder.indexOf(b);
+                                    return (
+                                      (aIndex === -1 ? 999 : aIndex) -
+                                      (bIndex === -1 ? 999 : bIndex)
+                                    );
+                                  });
+
+                              return sortedUpdates
+                                .map(
+                                  (field) =>
+                                    FIELD_DISPLAY_NAMES[field] || field,
+                                )
+                                .join("\n");
+                            })()
                           : ""
                       }
                       readOnly
